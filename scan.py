@@ -9,12 +9,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dotenv import load_dotenv
 
 from type_classes import Approach, Sample, language_extensions
+from utils import relative_path_from_root
 
 load_dotenv()
-data_file_path = os.getenv('DATA_FILE_PATH')
+data_file_path = relative_path_from_root(os.getenv('DATA_FILE_PATH'))
 
-working_dir = './tmp'
-dataset = './dataset'
+working_dir = relative_path_from_root('./tmp')
 
 os.makedirs(working_dir, exist_ok=True)
 
@@ -59,7 +59,7 @@ def get_file_name(item):
 
 def main():
     st = time.time()
-    subfolder = os.path.join(working_dir, str(uuid.uuid4()))
+    subfolder = relative_path_from_root(os.path.join(working_dir, str(uuid.uuid4())))
     os.makedirs(subfolder)
     print(f"Subfolder created: {subfolder}")
 
