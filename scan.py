@@ -59,7 +59,6 @@ def get_file_name(item):
 
 def main():
     st = time.time()
-    # Create a subfolder with a random name
     subfolder = os.path.join(working_dir, str(uuid.uuid4()))
     os.makedirs(subfolder)
     print(f"Subfolder created: {subfolder}")
@@ -70,36 +69,29 @@ def main():
     approach = Approach(**data)
     samples = approach.attempt.data
 
-    with ThreadPoolExecutor() as executor:
-        # Submit file writing tasks
-        write_futures = {executor.submit(write_extracted_code, sample, subfolder): sample.id for sample in samples}
+    for sample in samples:
+        try:
+            file_path = write_extracted_code(sample, subfolder)
+            print(f"File {sample.id} written: {file_path}")
+        except Exception as e:
+            print(f"Error writing file {sample.id}: {e}")
 
-        # Wait for all file writing to complete
-        for future in as_completed(write_futures):
-            index = write_futures[future]
+    command = f"semgrep --json --quiet --no-git-ignore {subfolder}"
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    print("Semgrep command result:")
+    print(result.stdout)
+
+
+    if result.returncode == 0:
+        json_output = json.loads(result.stdout)
+
+        for sample in samples:
             try:
-                file_path = future.result()
-                print(f"File {index} written: {file_path}")
-            except Exception as e:
-                print(f"Error writing file {index}: {e}")
-
-
-
-        command = f"semgrep --json --quiet --no-git-ignore {subfolder}"
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-        print(f"Semgrep command result:")
-        print(result.stdout)
-        if result.returncode == 0:
-            json_output = json.loads(result.stdout)
-
-            extract_scan_futures = {executor.submit(extract_scan_results, json_output, sample, subfolder): sample.id for sample in
-                                    samples}
-
-            for future in as_completed(extract_scan_futures):
-                index = extract_scan_futures[future]
-                file_specific_results, cwe_filtered_results = future.result()
+                file_specific_results, cwe_filtered_results = extract_scan_results(json_output, sample, subfolder)
                 if cwe_filtered_results:
-                    print(f"Suspected vulnerability found in {index}: {result}")
+                    print(f"Suspected vulnerability found in {sample.id}: {cwe_filtered_results}")
+            except Exception as e:
+                print(f"Error processing results for {sample.id}: {e}")
         et = time.time()
         print(f"Total time: {et - st}")
 
