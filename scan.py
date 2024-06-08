@@ -13,7 +13,6 @@ from type_classes import Approach, Sample, language_extensions
 load_dotenv()
 data_file_path = os.getenv('DATA_FILE_PATH')
 
-
 working_dir = './tmp'
 dataset = './dataset'
 
@@ -22,7 +21,6 @@ os.makedirs(working_dir, exist_ok=True)
 
 def encode_name(name: str) -> str:
     return base64.urlsafe_b64encode(name.encode()).decode()
-
 
 
 def decode_name(encoded_name: str) -> str:
@@ -34,7 +32,7 @@ def write_extracted_code(item: Sample, folder: str):
 
     if not file_extension:
         raise ValueError(f"Unsupported language {item.language}")
-    file_name = f"{item.id}{file_extension}"
+    file_name = f"{item.id}.{file_extension}"
     file_path = os.path.join(folder, file_name)
 
     with open(file_path, 'w') as file:
@@ -43,6 +41,21 @@ def write_extracted_code(item: Sample, folder: str):
 
     return file_name
 
+
+def extract_scan_results(semgrep_result, item: Sample, folder: str):
+    file_extension = language_extensions.get(item.language)
+
+    if not file_extension:
+        raise ValueError(f"Unsupported language {item.language}")
+    file_name = f"{item.id}.{file_extension}"
+    file_path = os.path.join(folder, file_name)
+    normpath = os.path.normpath(file_path)
+    # Filter scan results by file path
+    file_specific_results = [result for result in semgrep_result['results'] if result['path'] == normpath]
+    # Filter by item.expected_vulnerability equals to result.extra.metadata.cwe
+    filtered_results = [result for result in file_specific_results if
+                        item.suspected_vulnerability in result['extra']['metadata']['cwe']]
+    return filtered_results
 
 
 def main():
@@ -62,34 +75,36 @@ def main():
         # Submit file writing tasks
         write_futures = {executor.submit(write_extracted_code, sample, subfolder): sample.id for sample in samples}
 
-
-        # Wait for all file writing to complete and submit command execution tasks
-        command_futures = {}
+        # Wait for all file writing to complete
         for future in as_completed(write_futures):
             index = write_futures[future]
             try:
                 file_path = future.result()
                 print(f"File {index} written: {file_path}")
-                command = f"semgrep --json --quiet {file_path}"
-                result = subprocess.run(command, shell=True, capture_output=True, text=True)
-                print(result)
-                # command_futures[executor.submit(execute_command_for_file, file_path)] = file_path
             except Exception as e:
                 print(f"Error writing file {index}: {e}")
 
-        # Wait for all command execution to complete
-        for future in as_completed(command_futures):
-            file_path = command_futures[future]
-            try:
-                stdout, stderr = future.result()
-                print(f"Output for {file_path}: {stdout}")
-                if stderr:
-                    print(f"Error for {file_path}: {stderr}")
-            except Exception as e:
-                print(f"Error executing command for {file_path}: {e}")
 
+
+        command = f"semgrep --json --quiet --no-git-ignore {subfolder}"
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        print(result)
+        if result.returncode == 0:
+            json_output = json.loads(result.stdout)
+            print(json_output)
+            print(json_output['results'])
+
+            extract_scan_futures = {executor.submit(extract_scan_results, json_output, sample, subfolder): sample.id for sample in
+                                    samples}
+
+            for future in as_completed(extract_scan_futures):
+                index = extract_scan_futures[future]
+                result = future.result()
+                if result:
+                    print(f"Suspected vulnerability found in {index}: {result}")
         et = time.time()
         print(f"Total time: {et - st}")
+
 
 if __name__ == "__main__":
     main()
