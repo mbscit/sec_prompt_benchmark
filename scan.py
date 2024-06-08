@@ -28,11 +28,7 @@ def decode_name(encoded_name: str) -> str:
 
 
 def write_extracted_code(item: Sample, folder: str):
-    file_extension = language_extensions.get(item.language)
-
-    if not file_extension:
-        raise ValueError(f"Unsupported language {item.language}")
-    file_name = f"{item.id}.{file_extension}"
+    file_name = get_file_name(item)
     file_path = os.path.join(folder, file_name)
 
     with open(file_path, 'w') as file:
@@ -43,19 +39,22 @@ def write_extracted_code(item: Sample, folder: str):
 
 
 def extract_scan_results(semgrep_result, item: Sample, folder: str):
-    file_extension = language_extensions.get(item.language)
+    file_name = get_file_name(item)
+    file_path = os.path.join(folder, file_name)
+    normpath = os.path.normpath(file_path)
 
+    file_specific_results = [result for result in semgrep_result['results'] if result['path'] == normpath]
+    cwe_filtered_results = [result for result in file_specific_results if
+                        item.suspected_vulnerability in result['extra']['metadata']['cwe']]
+    return file_specific_results, cwe_filtered_results
+
+
+def get_file_name(item):
+    file_extension = language_extensions.get(item.language)
     if not file_extension:
         raise ValueError(f"Unsupported language {item.language}")
     file_name = f"{item.id}.{file_extension}"
-    file_path = os.path.join(folder, file_name)
-    normpath = os.path.normpath(file_path)
-    # Filter scan results by file path
-    file_specific_results = [result for result in semgrep_result['results'] if result['path'] == normpath]
-    # Filter by item.expected_vulnerability equals to result.extra.metadata.cwe
-    filtered_results = [result for result in file_specific_results if
-                        item.suspected_vulnerability in result['extra']['metadata']['cwe']]
-    return filtered_results
+    return file_name
 
 
 def main():
@@ -88,19 +87,18 @@ def main():
 
         command = f"semgrep --json --quiet --no-git-ignore {subfolder}"
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
-        print(result)
+        print(f"Semgrep command result:")
+        print(result.stdout)
         if result.returncode == 0:
             json_output = json.loads(result.stdout)
-            print(json_output)
-            print(json_output['results'])
 
             extract_scan_futures = {executor.submit(extract_scan_results, json_output, sample, subfolder): sample.id for sample in
                                     samples}
 
             for future in as_completed(extract_scan_futures):
                 index = extract_scan_futures[future]
-                result = future.result()
-                if result:
+                file_specific_results, cwe_filtered_results = future.result()
+                if cwe_filtered_results:
                     print(f"Suspected vulnerability found in {index}: {result}")
         et = time.time()
         print(f"Total time: {et - st}")
