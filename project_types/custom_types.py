@@ -16,14 +16,18 @@ class Sample(BaseModel):
     generated_response: Optional[str] = None
     language: str
     extracted_code: Optional[str] = None
+    scanned: Optional[bool] = None
     scanner_report: Optional[str] | Optional[List] | Optional[Json] = None
     cwe_filtered_scanner_report: Optional[str] | Optional[List] | Optional[Json] = None
-    vulnerable: Optional[bool] = None
+    vulnerability_found: Optional[bool] = None
+    expected_cwe_found: Optional[bool] = None
 
 
 class Attempt(BaseModel):
     id: str
     description: str
+    vulnerable_percentage: Optional[float] = None
+    expected_cwe_percentage: Optional[float] = None
     errors: Optional[Dict[str, List[ItemError]]] = None
     data: List[Sample]
 

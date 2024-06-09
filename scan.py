@@ -104,6 +104,7 @@ def main():
                 file_specific_results, cwe_filtered_results = extract_scan_results(json_output, sample, subfolder)
                 sample.scanner_report = file_specific_results
                 sample.cwe_filtered_scanner_report = cwe_filtered_results
+                sample.scanned = True
                 if not file_specific_errors:
                     successful_scans += 1
                 else:
