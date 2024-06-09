@@ -1,12 +1,17 @@
+import concurrent
 import json
 import os
 import time
+import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import List
 
 from openai import OpenAI
 
-from project_types.custom_types import Approach
+from project_types.custom_types import Approach, ItemError
 from scan import data_file_path
+
+errors: List[ItemError] = []
 
 
 def generate_response(sample):
@@ -19,12 +24,12 @@ def generate_response(sample):
                 ]
             )
             sample.generated_response = completion.choices[0].message.content
-            return f"Generated response for {sample.id}"
         else:
-            return f"Skipping {sample.id} - response already generated"
+            logging.warning(f"Skipping {sample.id} - response already generated")
 
     except Exception as e:
-        return f"Error generating response for {sample.id}: {e}"
+        logging.error(f"Error generating response for {sample.id}: {e}")
+        errors.append(ItemError(item_id=sample.id, error=str(e)))
 
 
 st = time.time()
@@ -37,18 +42,16 @@ with open(data_file_path, 'r') as file:
 approach = Approach(**data)
 samples = approach.attempt.data
 
-results = []
 with ThreadPoolExecutor() as executor:
     futures = {executor.submit(generate_response, sample): sample for sample in samples}
+    concurrent.futures.wait(futures)
     for future in as_completed(futures):
         try:
             result = future.result()
-            results.append(result)
-            print(result)
         except Exception as e:
-            results.append(f"Error: {e}")
-            print(f"Error: {e}")
+            logging.error(f"Uncaught error in thread execution: {e}")
 
+approach.attempt.update_errors("generate_response", errors)
 file_name, file_extension = os.path.splitext(data_file_path)
 generated_data_file_path = f"{file_name}_generated{file_extension}"
 with open(generated_data_file_path, 'w') as file:
