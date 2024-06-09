@@ -68,6 +68,7 @@ with open(generated_data_file_path, 'w') as file:
 et = time.time()
 print(f"Total time: {et - st}")
 print(f"Summary:")
+print(f"Total Samples: {len(samples)}")
 print(f"Successful Generations: {successful_generations.value}")
 print(f"Skipped Samples: {skipped_samples.value}")
 print(f"Error Samples: {error_samples.value}")
