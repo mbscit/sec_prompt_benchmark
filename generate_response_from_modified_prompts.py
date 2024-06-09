@@ -5,6 +5,7 @@ import time
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
+from multiprocessing import Value
 
 from openai import OpenAI
 
@@ -12,7 +13,13 @@ from project_types.custom_types import Approach, ItemError
 from scan import data_file_path
 
 errors: List[ItemError] = []
+successful_generations = Value('i', 0)
+skipped_samples = Value('i', 0)
+error_samples = Value('i', 0)
 
+def increment_counter(counter):
+    with counter.get_lock():
+        counter.value += 1
 
 def generate_response(sample):
     try:
@@ -24,13 +31,15 @@ def generate_response(sample):
                 ]
             )
             sample.generated_response = completion.choices[0].message.content
+            increment_counter(successful_generations)
         else:
             logging.warning(f"Skipping {sample.id} - response already generated")
+            increment_counter(skipped_samples)
 
     except Exception as e:
         logging.error(f"Error generating response for {sample.id}: {e}")
         errors.append(ItemError(item_id=sample.id, error=str(e)))
-
+        increment_counter(error_samples)
 
 st = time.time()
 
@@ -44,7 +53,6 @@ samples = approach.attempt.data
 
 with ThreadPoolExecutor() as executor:
     futures = {executor.submit(generate_response, sample): sample for sample in samples}
-    concurrent.futures.wait(futures)
     for future in as_completed(futures):
         try:
             result = future.result()
@@ -59,3 +67,7 @@ with open(generated_data_file_path, 'w') as file:
 
 et = time.time()
 print(f"Total time: {et - st}")
+print(f"Summary:")
+print(f"Successful Generations: {successful_generations.value}")
+print(f"Skipped Samples: {skipped_samples.value}")
+print(f"Error Samples: {error_samples.value}")
