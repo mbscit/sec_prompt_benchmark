@@ -1,17 +1,18 @@
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Json
 
 
 class Sample(BaseModel):
     id: str
     original_prompt: str
-    modified_prompt: str
+    modified_prompt: Optional[str] = None
     suspected_vulnerability: str
-    generated_code: str
+    generated_response: Optional[str] = None
     language: str
-    extracted_code: str
-    scanner_report: Optional[str] = None
+    extracted_code: Optional[str] = None
+    scanner_report: Optional[str] | Optional[List] | Optional[Json] = None
+    cwe_filtered_scanner_report:Optional[str] | Optional[List] | Optional[Json] = None
     vulnerable: Optional[bool] = None
 
 
@@ -31,3 +32,4 @@ language_extensions = {
     'cpp': 'cpp',
     'C': 'c'
 }
+

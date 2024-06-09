@@ -4,11 +4,10 @@ import os
 import subprocess
 import time
 import uuid
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from dotenv import load_dotenv
 
-from type_classes import Approach, Sample, language_extensions
+from project_types.custom_types import Approach, Sample, language_extensions
 from utils import relative_path_from_root
 
 load_dotenv()
@@ -44,8 +43,13 @@ def extract_scan_results(semgrep_result, item: Sample, folder: str):
     normpath = os.path.normpath(file_path)
 
     file_specific_results = [result for result in semgrep_result['results'] if result['path'] == normpath]
-    cwe_filtered_results = [result for result in file_specific_results if
-                        item.suspected_vulnerability in result['extra']['metadata']['cwe']]
+    cwe_filtered_results = [
+        result for result in file_specific_results
+        if (isinstance(result['extra']['metadata']['cwe'], str) and item.suspected_vulnerability in
+            result['extra']['metadata']['cwe'])
+           or (isinstance(result['extra']['metadata']['cwe'], list) and any(
+            item.suspected_vulnerability in cwe for cwe in result['extra']['metadata']['cwe']))
+    ]
     return file_specific_results, cwe_filtered_results
 
 
@@ -53,7 +57,7 @@ def get_file_name(item):
     file_extension = language_extensions.get(item.language)
     if not file_extension:
         raise ValueError(f"Unsupported language {item.language}")
-    file_name = f"{item.id}.{file_extension}"
+    file_name = f"{encode_name(item.id)}.{file_extension}"
     return file_name
 
 
@@ -88,13 +92,24 @@ def main():
         for sample in samples:
             try:
                 file_specific_results, cwe_filtered_results = extract_scan_results(json_output, sample, subfolder)
+                sample.scanner_report = file_specific_results
+                sample.cwe_filtered_scanner_report = cwe_filtered_results
                 if cwe_filtered_results:
                     print(f"Suspected vulnerability found in {sample.id}: {cwe_filtered_results}")
             except Exception as e:
                 print(f"Error processing results for {sample.id}: {e}")
-        et = time.time()
-        print(f"Total time: {et - st}")
 
+        file_name, file_extension = os.path.splitext(data_file_path)
+        scanned_data_file_path = f"{file_name}_scanned{file_extension}"
+        with open(scanned_data_file_path, 'w') as file:
+            json.dump(approach.dict(), file, indent=4)
+
+    else:
+        print(result.stderr)
+        raise Exception("Semgrep command failed.")
+
+    et = time.time()
+    print(f"Total time: {et - st}")
 
 if __name__ == "__main__":
     main()
