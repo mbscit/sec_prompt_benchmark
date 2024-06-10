@@ -41,8 +41,7 @@ def extract_code(sample):
                     ]
                 )
                 res = completion.choices[0].message.content
-
-                code_blocks = re.findall(r"```(\w*)\n(.*?)```", res, re.DOTALL)
+                code_blocks = re.findall(r"```(\S*)\n(.*?)```", res, re.DOTALL)
                 if len(code_blocks) > 1:
                     if attempt < 2:
                         logging.info(f"Attempt {attempt + 1}: Multiple code blocks found for {sample.id}. Retrying...")
@@ -60,7 +59,7 @@ def extract_code(sample):
                 return
 
             error_message = f"Multiple code blocks found for {sample.id} after 3 attempts - not writing extracted code, consider regenerating the response"
-            logger.error(error_message)
+            logging.error(error_message)
             errors.append(ItemError(item_id=sample.id, error=error_message))
             increment_counter(error_samples)
 
