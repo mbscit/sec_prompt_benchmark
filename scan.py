@@ -82,7 +82,9 @@ def main():
     subfolder = relative_path_from_root(os.path.join(working_dir, str(uuid.uuid4())))
     os.makedirs(subfolder)
 
-    with open(data_file_path, 'r') as file:
+    file_name, file_extension = os.path.splitext(data_file_path)
+
+    with open(f"{file_name}_generated_extracted{file_extension}", 'r') as file:
         data = json.load(file)
 
     approach = Approach(**data)
@@ -119,7 +121,7 @@ def main():
 
         approach.attempt.update_errors("scan", errors)
         file_name, file_extension = os.path.splitext(data_file_path)
-        scanned_data_file_path = f"{file_name}_scanned{file_extension}"
+        scanned_data_file_path = f"{file_name}_generated_extracted_scanned{file_extension}"
         with open(scanned_data_file_path, 'w') as file:
             json.dump(approach.dict(), file, indent=4)
 

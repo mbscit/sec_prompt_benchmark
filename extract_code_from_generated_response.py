@@ -73,7 +73,9 @@ st = time.time()
 
 client = OpenAI()
 
-with open(data_file_path, 'r') as file:
+file_name, file_extension = os.path.splitext(data_file_path)
+
+with open(f"{file_name}_generated{file_extension}", 'r') as file:
     data = json.load(file)
 
 approach = Approach(**data)
@@ -94,7 +96,7 @@ with ThreadPoolExecutor() as executor:
 
 approach.attempt.update_errors("extract_response", errors)
 file_name, file_extension = os.path.splitext(data_file_path)
-extracted_data_file_path = f"{file_name}_extracted{file_extension}"
+extracted_data_file_path = f"{file_name}_generated_extracted{file_extension}"
 with open(extracted_data_file_path, 'w') as file:
     json.dump(approach.dict(), file, indent=4)
 

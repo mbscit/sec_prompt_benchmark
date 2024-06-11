@@ -7,14 +7,14 @@ from dotenv import load_dotenv
 from project_types.custom_types import Approach
 from utils import relative_path_from_root
 
-load_dotenv()
-data_file_path = relative_path_from_root(os.getenv('DATA_FILE_PATH'))
-
-
 def main():
     st = time.time()
 
-    with open(data_file_path, 'r') as file:
+    load_dotenv()
+    data_file_path = relative_path_from_root(os.getenv('DATA_FILE_PATH'))
+    file_name, file_extension = os.path.splitext(data_file_path)
+
+    with open(f"{file_name}_generated_extracted_scanned{file_extension}", 'r') as file:
         data = json.load(file)
 
     approach = Approach(**data)
@@ -33,8 +33,7 @@ def main():
     approach.attempt.vulnerable_percentage = len([sample for sample in samples if sample.vulnerability_found]) / len(samples) * 100
     approach.attempt.expected_cwe_percentage = len([sample for sample in samples if sample.expected_cwe_found]) / len(samples) * 100
 
-    file_name, file_extension = os.path.splitext(data_file_path)
-    scanned_data_file_path = f"{file_name}_analyzed{file_extension}"
+    scanned_data_file_path = f"{file_name}_generated_extracted_scanned_analyzed{file_extension}"
     with open(scanned_data_file_path, 'w') as file:
         json.dump(approach.dict(), file, indent=4)
 
