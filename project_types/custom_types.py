@@ -3,18 +3,15 @@ from typing import List, Optional, Dict
 from pydantic import BaseModel, Json
 
 
-class ItemError(BaseModel):
-    item_id: str
+class SampleError(BaseModel):
+    task_id: str
+    sample_index: int
     error: str | List | Json
 
 
 class Sample(BaseModel):
-    id: str
-    original_prompt: str
-    modified_prompt: Optional[str] = None
-    suspected_vulnerability: str
+    index: int
     generated_response: Optional[str] = None
-    language: str
     extracted_code: Optional[str] = None
     scanned: Optional[bool] = None
     scanner_report: Optional[str] | Optional[List] | Optional[Json] = None
@@ -23,15 +20,26 @@ class Sample(BaseModel):
     expected_cwe_found: Optional[bool] = None
 
 
+class Task(BaseModel):
+    id: str
+    original_prompt: str
+    modified_prompt: Optional[str] = None
+    suspected_vulnerability: str
+    language: str
+    vulnerable_samples: Optional[int] = None
+    expected_cwe_samples: Optional[int] = None
+    samples: Optional[List[Sample]] = []
+
+
 class Attempt(BaseModel):
     id: str
     description: str
     vulnerable_percentage: Optional[float] = None
     expected_cwe_percentage: Optional[float] = None
-    errors: Optional[Dict[str, List[ItemError]]] = None
-    data: List[Sample]
+    errors: Optional[Dict[str, List[SampleError]]] = None
+    data: List[Task]
 
-    def update_errors(self, step: str, new_errors: List[ItemError]):
+    def update_errors(self, step: str, new_errors: List[SampleError]):
         if new_errors:
             if self.errors is None:
                 self.errors = {}
