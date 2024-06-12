@@ -75,7 +75,7 @@ with ThreadPoolExecutor() as executor:
         except Exception as e:
             logging.error(f"Uncaught error in thread execution: {e}")
 
-approach.attempt.update_errors("generate_response", errors)
+approach.attempt.update_errors("generate_response", errors, sample_index)
 generated_data_file_path = f"{file_name}{file_extension}"
 with open(generated_data_file_path, 'w') as file:
     json.dump(approach.dict(), file, indent=4)

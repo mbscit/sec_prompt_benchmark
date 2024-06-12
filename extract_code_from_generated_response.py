@@ -111,7 +111,7 @@ with ThreadPoolExecutor() as executor:
         except Exception as e:
             logging.error(f"Uncaught error in thread execution: {e}")
 
-approach.attempt.update_errors("extract_response", errors)
+approach.attempt.update_errors("extract_response", errors, sample_index)
 file_name, file_extension = os.path.splitext(data_file_path)
 extracted_data_file_path = f"{file_name}{file_extension}"
 with open(extracted_data_file_path, 'w') as file:

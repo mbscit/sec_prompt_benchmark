@@ -39,11 +39,19 @@ class Attempt(BaseModel):
     errors: Optional[Dict[str, List[SampleError]]] = None
     data: List[Task]
 
-    def update_errors(self, step: str, new_errors: List[SampleError]):
+    def update_errors(self, step: str, new_errors: List[SampleError], sample_index: int):
+        if self.errors is None:
+            self.errors = {}
+
+        if step not in self.errors:
+            self.errors[step] = []
+
+        # clear any existing errors for this step and sample index
+        self.errors[step] = [error for error in self.errors[step] if error.sample_index != sample_index]
+
+        # add errors from the current run
         if new_errors:
-            if self.errors is None:
-                self.errors = {}
-            self.errors[step] = new_errors
+            self.errors[step].extend(new_errors)
 
 
 class Approach(BaseModel):
