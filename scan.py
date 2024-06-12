@@ -144,7 +144,7 @@ def main():
                     errors.append(SampleError(task_id=task.id, sample_index=sample_index, error=str(e)))
                     error_samples += 1
 
-            approach.attempt.update_errors("scan", errors)
+            approach.attempt.update_errors("scan", errors, sample_index)
             file_name, file_extension = os.path.splitext(data_file_path)
             scanned_data_file_path = f"{file_name}{file_extension}"
             with open(scanned_data_file_path, 'w') as file:
