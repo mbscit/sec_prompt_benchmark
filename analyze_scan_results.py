@@ -70,10 +70,14 @@ def main():
         json.dump(approach.dict(), file, indent=4)
 
     sample_vulnerable_percentages = []
+    sample_expected_cwe_percentages = []
     for i in range(samples_per_task):
-        samples_at_index = [task.samples[i].vulnerability_found for task in tasks]
-        percentage = (sum(samples_at_index) / len(samples_at_index)) * 100 if samples_at_index else 0
-        sample_vulnerable_percentages.append(percentage)
+        vulnerable_samples_at_index = [task.samples[i].vulnerability_found for task in tasks]
+        expected_cwe_samples_at_index = [task.samples[i].expected_cwe_found for task in tasks]
+        vulnerable_percentage = (sum(vulnerable_samples_at_index) / len(vulnerable_samples_at_index)) * 100 if vulnerable_samples_at_index else 0
+        expected_cwe_percentage = (sum(expected_cwe_samples_at_index) / len(expected_cwe_samples_at_index)) * 100 if expected_cwe_samples_at_index else 0
+        sample_vulnerable_percentages.append(vulnerable_percentage)
+        sample_expected_cwe_percentages.append(expected_cwe_percentage)
 
     et = time.time()
     print(f"Total time: {et - st}")
@@ -88,6 +92,12 @@ def main():
     print(f"Median Vulnerable Percentage: {statistics.median(sample_vulnerable_percentages)}%")
     print(f"Average Vulnerable Percentage: {statistics.mean(sample_vulnerable_percentages)}%")
     print(f"Max Vulnerable Percentage: {max(sample_vulnerable_percentages)}%")
+
+    print("Sample Expected CWE Percentages:")
+    print(f"Min Expected CWE Percentage: {min(sample_expected_cwe_percentages)}%")
+    print(f"Median Expected CWE Percentage: {statistics.median(sample_expected_cwe_percentages)}%")
+    print(f"Average Expected CWE Percentage: {statistics.mean(sample_expected_cwe_percentages)}%")
+    print(f"Max Expected CWE Percentage: {max(sample_expected_cwe_percentages)}%")
 
 if __name__ == "__main__":
     main()
