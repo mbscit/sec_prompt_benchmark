@@ -22,3 +22,7 @@ def relative_path_from_root(file_path):
     full_relative_path = os.path.join(relative_to_root, file_path)
 
     return full_relative_path
+
+def increment_counter(counter):
+    with counter.get_lock():
+        counter.value += 1
