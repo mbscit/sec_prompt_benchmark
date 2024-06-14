@@ -148,7 +148,7 @@ def main():
             file_name, file_extension = os.path.splitext(data_file_path)
             scanned_data_file_path = f"{file_name}{file_extension}"
             with open(scanned_data_file_path, 'w') as file:
-                json.dump(approach.dict(), file, indent=4)
+                json.dump(approach.dict(exclude_defaults=True), file, indent=4)
 
         else:
             raise Exception(f"Semgrep command failed. {result.stderr}")
