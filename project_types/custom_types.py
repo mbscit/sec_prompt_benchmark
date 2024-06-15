@@ -1,19 +1,21 @@
 from typing import List, Optional, Dict
 
-from pydantic import BaseModel, Json
+from pydantic import BaseModel, Json, validator, field_validator
 
 
 class SampleError(BaseModel):
     task_id: str
     sample_index: int
-    error: str | List | Json
+    error: str
+
+
 
 
 class Sample(BaseModel):
     index: int
     generated_response: Optional[str] = None
     extracted_code: Optional[str] = None
-    scanned: Optional[bool] = None
+    successfully_scanned: Optional[bool] = None
     scanner_report: Optional[str] | Optional[List] | Optional[Json] = None
     cwe_filtered_scanner_report: Optional[str] | Optional[List] | Optional[Json] = None
     vulnerability_found: Optional[bool] = None

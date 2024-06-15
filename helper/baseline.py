@@ -21,4 +21,4 @@ for sample in samples:
 file_name, file_extension = os.path.splitext(data_file_path)
 scanned_data_file_path = f"{file_name}_baseline{file_extension}"
 with open(scanned_data_file_path, 'w') as file:
-    json.dump(approach.dict(exclude_unset=True), file, indent=4)
+    json.dump(approach.dict(exclude_defaults=True), file, indent=4)
