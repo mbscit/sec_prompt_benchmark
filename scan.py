@@ -79,7 +79,7 @@ class Scanner:
         subfolder = relative_path_from_root(os.path.join(working_dir, str(uuid.uuid4())))
         os.makedirs(subfolder)
 
-        tasks = approach.attempt.data
+        tasks = approach.data
 
         utils.validate_task_integrity(tasks, ["id", "suspected_vulnerability"])
         utils.validate_sample_integrity(tasks, ["extracted_code"], sample_index + 1)
@@ -125,7 +125,7 @@ class Scanner:
             else:
                 raise Exception(f"Semgrep command failed. {result.stderr}")
 
-            approach.attempt.update_errors("scan", self.errors, sample_index)
+            approach.update_errors("scan", self.errors, sample_index)
 
             print(f"Summary:")
             print(f"Total Samples: {len(tasks)}")

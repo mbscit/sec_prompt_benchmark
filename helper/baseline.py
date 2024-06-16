@@ -13,7 +13,7 @@ with open(data_file_path, 'r') as file:
     data = json.load(file)
 
 approach = Approach(**data)
-samples = approach.attempt.data
+samples = approach.data
 
 for sample in samples:
     sample.modified_prompt = sample.original_prompt

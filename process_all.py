@@ -57,14 +57,14 @@ def main():
 
         # if syntax errors were found by the scanner, regenerate and rescan the affected sample
         # abort after 3 unsuccessful regenerations
-        scan_errors = [error for error in approach.attempt.errors["scan"] if error.sample_index == i]
+        scan_errors = [error for error in approach.errors["scan"] if error.sample_index == i]
         syntax_errors = [error for error in scan_errors if error.error.startswith("Syntax error at")]
         num_regenerations = 0
         while syntax_errors and num_regenerations < 3:
             logging.warning(
                 f"Syntax errors found in {len(syntax_errors)} samples, regenerating and rescanning affected samples")
             num_regenerations += 1
-            error_tasks = [task for task in approach.attempt.data if
+            error_tasks = [task for task in approach.data if
                            task.id in [error.task_id for error in syntax_errors]]
 
             for task in error_tasks:
@@ -78,7 +78,7 @@ def main():
             code_extractor.extract_missing(approach, i)
             scanner = Scanner()
             scanner.scan_samples(approach, i)
-            scan_errors = [error for error in approach.attempt.errors["scan"] if error.sample_index == i]
+            scan_errors = [error for error in approach.errors["scan"] if error.sample_index == i]
             syntax_errors = [error for error in scan_errors if error.error.startswith("Syntax error at")]
 
         if syntax_errors:

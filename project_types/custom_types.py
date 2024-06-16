@@ -1,14 +1,12 @@
 from typing import List, Optional, Dict
 
-from pydantic import BaseModel, Json, validator, field_validator
+from pydantic import BaseModel, Json
 
 
 class SampleError(BaseModel):
     task_id: str
     sample_index: int
     error: str
-
-
 
 
 class Sample(BaseModel):
@@ -33,7 +31,7 @@ class Task(BaseModel):
     samples: Optional[List[Sample]] = []
 
 
-class Attempt(BaseModel):
+class Approach(BaseModel):
     id: str
     description: str
     vulnerable_percentage: Optional[float] = None
@@ -56,13 +54,9 @@ class Attempt(BaseModel):
             self.errors[step].extend(new_errors)
 
 
-class Approach(BaseModel):
-    attempt: Attempt
-
-
 language_extensions = {
     'python': 'py',
     'Java': 'java',
-    'cpp': 'cpp',
+    'C++': 'cpp',
     'C': 'c'
 }

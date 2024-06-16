@@ -87,7 +87,7 @@ class CodeExtractor:
 
     def extract_missing(self, approach: Approach, sample_index: int):
 
-        tasks: List[Task] = approach.attempt.data
+        tasks: List[Task] = approach.data
 
         utils.validate_task_integrity(tasks, ["id", "language"])
         utils.validate_sample_integrity(tasks, ["generated_response"], sample_index + 1)
@@ -107,7 +107,7 @@ class CodeExtractor:
                 except Exception as e:
                     raise e
                 finally:
-                    approach.attempt.update_errors("extract_response", self.errors, sample_index)
+                    approach.update_errors("extract_response", self.errors, sample_index)
 
             print(f"Summary:")
             print(f"Total Samples: {len(tasks)}")

@@ -57,7 +57,7 @@ class ResponseGenerator:
             increment_counter(self.error_samples)
 
     def generate_missing(self, approach: Approach, sample_index: int):
-        tasks: List[Task] = approach.attempt.data
+        tasks: List[Task] = approach.data
         utils.validate_task_integrity(tasks, ["modified_prompt"])
 
         if all(any(sample.index == sample_index and sample.generated_response for sample in task.samples) for task in
@@ -75,7 +75,7 @@ class ResponseGenerator:
                 except Exception as e:
                     raise e
                 finally:
-                    approach.attempt.update_errors("generate_response", self.errors, sample_index)
+                    approach.update_errors("generate_response", self.errors, sample_index)
 
             print(f"Summary:")
             print(f"Total Samples: {len(tasks)}")

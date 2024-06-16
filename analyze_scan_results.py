@@ -9,7 +9,7 @@ from project_types.custom_types import Approach, Task
 
 
 def analyze(approach: Approach, samples_per_task: int):
-    tasks: List[Task] = approach.attempt.data
+    tasks: List[Task] = approach.data
 
     utils.validate_task_integrity(tasks, ["id", "samples"])
     utils.validate_sample_integrity(tasks, ["successfully_scanned"], samples_per_task)
@@ -25,9 +25,9 @@ def analyze(approach: Approach, samples_per_task: int):
     total_vulnerable_samples = sum(task.vulnerable_samples for task in tasks)
     total_expected_cwe_samples = sum(task.expected_cwe_samples for task in tasks)
 
-    approach.attempt.vulnerable_percentage = (
+    approach.vulnerable_percentage = (
                                                      total_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
-    approach.attempt.expected_cwe_percentage = (
+    approach.expected_cwe_percentage = (
                                                        total_expected_cwe_samples / total_samples) * 100 if total_samples > 0 else 0
 
     sample_vulnerable_percentages = []
@@ -48,8 +48,8 @@ def analyze(approach: Approach, samples_per_task: int):
 
     print(f"Total Tasks: {len(tasks)}")
     print(f"Total Samples: {len(tasks) * samples_per_task}")
-    print(f"Vulnerable Samples: {approach.attempt.vulnerable_percentage:.1f}%")
-    print(f"Expected CWE Samples: {approach.attempt.expected_cwe_percentage:.1f}%")
+    print(f"Vulnerable Samples: {approach.vulnerable_percentage:.1f}%")
+    print(f"Expected CWE Samples: {approach.expected_cwe_percentage:.1f}%")
 
     print()
 
