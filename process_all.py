@@ -3,6 +3,7 @@ import logging
 import os
 import time
 
+import openai
 from dotenv import load_dotenv
 
 import analyze_scan_results
@@ -10,6 +11,24 @@ from extract_code_from_generated_response import CodeExtractor
 from generate_response_from_modified_prompts import ResponseGenerator
 from project_types.custom_types import Approach
 from scan import Scanner
+
+
+def retry_on_rate_limit(func, *args, **kwargs):
+    waiting_period_seconds = 15
+    max_retries = 5
+    retries = 0
+    while retries < max_retries:
+        try:
+            return func(*args, **kwargs)
+        except openai.RateLimitError:
+            retries += 1
+            if retries < max_retries:
+                logging.warning(
+                    f"Rate limit error encountered. Retrying after {waiting_period_seconds} seconds...")
+                time.sleep(15)
+            else:
+                logging.error("Max retries reached. Function call failed due to rate limit.")
+                raise
 
 
 def main():
@@ -29,7 +48,7 @@ def main():
         print(f"Starting response generation for sample {i}")
         st = time.time()
         response_generator = ResponseGenerator()
-        response_generator.generate_missing(approach, i)
+        retry_on_rate_limit(response_generator.generate_missing, approach, i)
         generated_data_file_path = f"{file_name}{file_extension}"
         et = time.time()
         with open(generated_data_file_path, 'w') as file:
@@ -41,7 +60,7 @@ def main():
         print(f"Starting response extraction for sample {i}: {(et - st):.2f}s")
         st = time.time()
         code_extractor = CodeExtractor()
-        code_extractor.extract_missing(approach, i)
+        retry_on_rate_limit(code_extractor.extract_missing, approach, i)
         extracted_data_file_path = f"{file_name}{file_extension}"
         et = time.time()
         with open(extracted_data_file_path, 'w') as file:
@@ -74,8 +93,8 @@ def main():
                 sample.scanner_report = None
                 sample.cwe_filtered_scanner_report = None
 
-            response_generator.generate_missing(approach, i)
-            code_extractor.extract_missing(approach, i)
+            retry_on_rate_limit(response_generator.generate_missing, approach, i)
+            retry_on_rate_limit(code_extractor.extract_missing, approach, i)
             scanner = Scanner()
             scanner.scan_samples(approach, i)
             scan_errors = [error for error in approach.errors["scan"] if error.sample_index == i]
