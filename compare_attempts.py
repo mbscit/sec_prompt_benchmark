@@ -1,13 +1,15 @@
 import csv
 import os
 import statistics
+import sys
 from typing import List
 
 import pandas as pd
 from dotenv import load_dotenv
 
 import utils
-from project_types.custom_types import Approach, Task
+from project_types.custom_types import Approach, Task, bcolors
+
 
 def compare(data_folder_path: str, samples_per_task: int):
     header = [
@@ -43,7 +45,10 @@ def compare(data_folder_path: str, samples_per_task: int):
                 matrix.append(results)
                 analyze(approach, samples_per_task, results)
             else:
-                print("approach is not analyzed yet, analyze it first")
+                print(
+                    f"{bcolors.FAIL}approach is not analyzed yet, analyze it first{bcolors.ENDC}",
+                    file=sys.stderr,
+                )
 
     # sort by column 2, "Vulnerable Samples"
     matrix.sort(key=lambda row: row[2])
