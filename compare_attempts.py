@@ -1,0 +1,114 @@
+import csv
+import os
+import statistics
+from typing import List
+
+import pandas as pd
+from dotenv import load_dotenv
+
+import utils
+from project_types.custom_types import Approach, Task
+
+
+def analyze(approach: Approach, samples_per_task: int, results):
+    tasks: List[Task] = approach.attempt.data
+
+    sample_vulnerable_percentages = []
+    sample_expected_cwe_percentages = []
+    for i in range(samples_per_task):
+        vulnerable_samples_at_index = [
+            task.samples[i].vulnerability_found for task in tasks
+        ]
+        expected_cwe_samples_at_index = [
+            task.samples[i].expected_cwe_found for task in tasks
+        ]
+        vulnerable_percentage = (
+            (sum(vulnerable_samples_at_index) / len(vulnerable_samples_at_index)) * 100
+            if vulnerable_samples_at_index
+            else 0
+        )
+        expected_cwe_percentage = (
+            (sum(expected_cwe_samples_at_index) / len(expected_cwe_samples_at_index))
+            * 100
+            if expected_cwe_samples_at_index
+            else 0
+        )
+        sample_vulnerable_percentages.append(vulnerable_percentage)
+        sample_expected_cwe_percentages.append(expected_cwe_percentage)
+
+    results.append(approach.attempt.id)
+
+    results.append(len(tasks))
+    results.append(len(tasks) * samples_per_task)
+    results.append(approach.attempt.vulnerable_percentage)
+    results.append(approach.attempt.expected_cwe_percentage)
+
+    results.append(min(sample_vulnerable_percentages))
+    results.append(statistics.median(sample_vulnerable_percentages))
+    results.append(statistics.mean(sample_vulnerable_percentages))
+    results.append(max(sample_vulnerable_percentages))
+
+    results.append(min(sample_expected_cwe_percentages))
+    results.append(statistics.median(sample_expected_cwe_percentages))
+    results.append(statistics.mean(sample_expected_cwe_percentages))
+    results.append(max(sample_expected_cwe_percentages))
+
+
+if __name__ == "__main__":
+    load_dotenv()
+
+    data_folder_path = os.path.dirname(os.getenv("DATA_FILE_PATH"))
+
+    samples_per_task = int(os.getenv("SAMPLES_PER_TASK"))
+
+    header = [
+        "Filename",
+        "Total Tasks",
+        "Total Samples",
+        "Vulnerable Samples",
+        "Expected CWE Samples",
+        "Sample Vulnerable Percentages",
+        "Min Vulnerable Percentage",
+        "Median Vulnerable Percentage",
+        "Average Vulnerable Percentage",
+        "Max Vulnerable Percentage",
+        "Min Expected CWE Percentage",
+        "Median Expected CWE Percentage",
+        "Average Expected CWE Percentage",
+        "Max Expected CWE Percentage",
+    ]
+
+    matrix = []
+
+    for file in os.listdir(data_folder_path):
+        data_file_path = os.path.join(data_folder_path, file)
+        # checking if it is a file
+        if os.path.isfile(data_file_path):
+            print(f"Analyzing: {data_file_path}")
+            approach = utils.read_approaches_file(data_file_path)
+            if (
+                not approach.attempt.vulnerable_percentage is None
+                and not approach.attempt.expected_cwe_percentage is None
+            ):
+                results = []
+                matrix.append(results)
+                analyze(approach, samples_per_task, results)
+            else:
+                print("approach is not analyzed yet, analyze it first")
+
+    # sort by column 2, "Vulnerable Samples"
+    matrix.sort(key=lambda row: row[2])
+
+    # add header
+    matrix.insert(0, header)
+
+    print_matrix = pd.DataFrame([row[0:5] for row in matrix]).to_string(
+        index=False, header=False
+    )
+
+    print()
+    print(print_matrix)
+
+    with open("attempt_comparison.csv", "w+") as output:
+        csvWriter = csv.writer(output, quoting=csv.QUOTE_ALL)
+        csvWriter.writerows(matrix)
