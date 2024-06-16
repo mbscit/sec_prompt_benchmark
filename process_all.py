@@ -115,6 +115,8 @@ def main():
             json.dump(approach.dict(exclude_defaults=True), file, indent=4)
         print(f"Scan for sample {i} finished, time: {(et - st):.1f}s")
 
+        print()
+
     analyze_scan_results.analyze(approach, samples_per_task)
 
 
