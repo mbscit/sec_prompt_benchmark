@@ -73,6 +73,12 @@ class CodeExtractor:
                                 SampleError(task_id=task.id, sample_index=sample.index, error=error_message))
                             increment_counter(self.error_samples)
                             return
+        except openai.RateLimitError as e:
+            logging.error(f"Rate limit exceeded at {task.id}: {e}")
+            self.errors.append(
+                SampleError(task_id=task.id, sample_index=sample.index, error="Rate limit exceeded"))
+            increment_counter(self.error_samples)
+            raise
 
         except Exception as e:
             logging.error(f"Error extracting code for {task.id}, sample {sample.index}: {e}")
