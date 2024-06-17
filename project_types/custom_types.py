@@ -56,6 +56,14 @@ class Approach(BaseModel):
             self.errors[step].extend(new_errors)
 
 
+class Prompt(BaseModel):
+    id: str
+    prompt: str
+    suspected_vulnerability: str
+    language: str
+    source: str
+
+
 language_extensions = {
     'python': 'py',
     'Java': 'java',

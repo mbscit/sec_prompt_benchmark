@@ -1,12 +1,11 @@
 import concurrent
 import json
 import os
-from concurrent.futures import CancelledError
 from typing import List
 
 import openai
 
-from project_types.custom_types import Task, Approach
+from project_types.custom_types import Prompt, Task, Approach
 
 
 def relative_path_from_root(file_path):
@@ -115,3 +114,12 @@ def write_approaches_file(data_file_path, approach: Approach):
     extracted_data_file_path = f"{file_name}{file_extension}"
     with open(extracted_data_file_path, 'w') as file:
         json.dump(approach.dict(exclude_defaults=True), file, indent=4)
+
+
+def read_dataset_file(dataset_file_path) -> List[Prompt]:
+    file_name, file_extension = os.path.splitext(dataset_file_path)
+    with open(f"{file_name}{file_extension}", 'r') as file:
+        data = json.load(file)
+
+    dataset = [Prompt(**d) for d in data]
+    return dataset
