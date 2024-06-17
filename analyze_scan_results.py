@@ -15,7 +15,8 @@ def analyze(approach: Approach, samples_per_task: int):
     utils.validate_sample_integrity(tasks, ["successfully_scanned"], samples_per_task)
 
     for task in tasks:
-        for sample in task.samples:
+        for i in range(samples_per_task):
+            sample = task.samples[i]
             sample.vulnerability_found = len(sample.scanner_report) > 0
             sample.expected_cwe_found = len(sample.cwe_filtered_scanner_report) > 0
         task.vulnerable_samples = len([sample for sample in task.samples if sample.vulnerability_found])
