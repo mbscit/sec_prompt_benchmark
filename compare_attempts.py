@@ -2,7 +2,6 @@ import csv
 import logging
 import os
 import statistics
-import sys
 from typing import List
 
 import pandas as pd
@@ -13,24 +12,6 @@ from project_types.custom_types import Approach, Task, bcolors
 
 
 def compare(data_folder_path: str, samples_per_task: int):
-    header = [
-        "Filename",
-        "ID",
-        "Total Tasks",
-        "Total Samples",
-        "Vulnerable Samples",
-        "Expected CWE Samples",
-        "Sample Vulnerable Percentages",
-        "Min Vulnerable Percentage",
-        "Median Vulnerable Percentage",
-        "Average Vulnerable Percentage",
-        "Max Vulnerable Percentage",
-        "Min Expected CWE Percentage",
-        "Median Expected CWE Percentage",
-        "Average Expected CWE Percentage",
-        "Max Expected CWE Percentage",
-    ]
-
     matrix = []
 
     for file in os.listdir(data_folder_path):
@@ -43,7 +24,7 @@ def compare(data_folder_path: str, samples_per_task: int):
                 not approach.vulnerable_percentage is None
                 and not approach.expected_cwe_percentage is None
             ):
-                results = [file]
+                results = {"Filename": file}
                 matrix.append(results)
                 analyze(approach, samples_per_task, results)
             else:
@@ -52,20 +33,25 @@ def compare(data_folder_path: str, samples_per_task: int):
                 )
 
     # sort by column 4, "Vulnerable Samples"
-    matrix.sort(key=lambda row: row[4])
+    matrix.sort(key=lambda row: row["Vulnerable Samples"], reverse=True)
 
-    # add header
-    matrix.insert(0, header)
-
-    print_matrix = pd.DataFrame(
-        [[row[0], row[2], row[3], row[4], row[5]] for row in matrix]
-    ).to_string(index=False, header=False)
+    print_matrix = pd.DataFrame.from_records(
+        matrix,
+        columns=[
+            "Filename",
+            "Total Tasks",
+            "Total Samples",
+            "Vulnerable Samples",
+            "Expected CWE Samples",
+        ],
+    ).to_string(index=False, header=True)
 
     print()
     print(print_matrix)
 
     with open("attempt_comparison.csv", "w+") as output:
-        csvWriter = csv.writer(output, quoting=csv.QUOTE_ALL)
+        csvWriter = csv.DictWriter(output, matrix[0].keys(), quoting=csv.QUOTE_ALL)
+        csvWriter.writeheader()
         csvWriter.writerows(matrix)
 
 
@@ -98,22 +84,31 @@ def analyze(approach: Approach, samples_per_task: int, results):
         sample_vulnerable_percentages.append(vulnerable_percentage)
         sample_expected_cwe_percentages.append(expected_cwe_percentage)
 
-    results.append(approach.id)
-
-    results.append(len(tasks))
-    results.append(len(tasks) * samples_per_task)
-    results.append(approach.vulnerable_percentage)
-    results.append(approach.expected_cwe_percentage)
-
-    results.append(min(sample_vulnerable_percentages))
-    results.append(statistics.median(sample_vulnerable_percentages))
-    results.append(statistics.mean(sample_vulnerable_percentages))
-    results.append(max(sample_vulnerable_percentages))
-
-    results.append(min(sample_expected_cwe_percentages))
-    results.append(statistics.median(sample_expected_cwe_percentages))
-    results.append(statistics.mean(sample_expected_cwe_percentages))
-    results.append(max(sample_expected_cwe_percentages))
+    results.update(
+        {
+            "ID": approach.id,
+            "Total Tasks": len(tasks),
+            "Total Samples": len(tasks) * samples_per_task,
+            "Vulnerable Samples": approach.vulnerable_percentage,
+            "Expected CWE Samples": approach.expected_cwe_percentage,
+            "Min Vulnerable Percentage": min(sample_vulnerable_percentages),
+            "Median Vulnerable Percentage": statistics.median(
+                sample_vulnerable_percentages
+            ),
+            "Average Vulnerable Percentage": statistics.mean(
+                sample_vulnerable_percentages
+            ),
+            "Max Vulnerable Percentage": max(sample_vulnerable_percentages),
+            "Min Expected CWE Percentage": min(sample_expected_cwe_percentages),
+            "Median Expected CWE Percentage": statistics.median(
+                sample_expected_cwe_percentages
+            ),
+            "Average Expected CWE Percentage": statistics.mean(
+                sample_expected_cwe_percentages
+            ),
+            "Max Expected CWE Percentage": max(sample_expected_cwe_percentages),
+        },
+    )
 
 
 if __name__ == "__main__":
