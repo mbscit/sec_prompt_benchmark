@@ -58,8 +58,11 @@ def validate_task_integrity(tasks: List[Task], required_attributes: List[str]):
 
 def validate_sample_integrity(tasks: List[Task], required_attributes: List[str], num_samples: int):
     errors: List[str] = []
+
     for i in range(num_samples):
         for task in tasks:
+            task.samples = sorted(task.samples, key=lambda sample: sample.index)
+
             samples = [sample for sample in task.samples if sample.index == i]
             if len(samples) < 1:
                 errors.append(f"Task {task.id} has no sample with index {i}")
@@ -68,7 +71,8 @@ def validate_sample_integrity(tasks: List[Task], required_attributes: List[str],
 
             for sample in samples:
                 for attribute in required_attributes:
-                    if (not hasattr(sample, attribute)) or (getattr(sample, attribute) != 0 and (not getattr(sample, attribute))):
+                    if (not hasattr(sample, attribute)) or (
+                            getattr(sample, attribute) != 0 and (not getattr(sample, attribute))):
                         errors.append(f"Task {task.id}, Sample {i} is missing {attribute}")
 
     if errors:
