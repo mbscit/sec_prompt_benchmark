@@ -93,9 +93,14 @@ def main():
                 sample.scanner_report = None
                 sample.cwe_filtered_scanner_report = None
 
+            # re-initialize workers to reset statistics
+            response_generator = ResponseGenerator()
+            code_extractor = CodeExtractor()
+            scanner = Scanner()
+
+            # re-genereate and re-scan affected samples
             retry_on_rate_limit(response_generator.generate_missing, approach, i)
             retry_on_rate_limit(code_extractor.extract_missing, approach, i)
-            scanner = Scanner()
             scanner.scan_samples(approach, i)
             scan_errors = [error for error in approach.errors["scan"] if error.sample_index == i]
             syntax_errors = [error for error in scan_errors if error.error.startswith("Syntax error at")]
@@ -114,4 +119,7 @@ def main():
 
 
 if __name__ == "__main__":
+    st = time.time()
     main()
+    et = time.time()
+    print(f"Total execution time: {(et - st):.2f}s")
