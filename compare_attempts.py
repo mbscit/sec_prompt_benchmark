@@ -1,7 +1,6 @@
 import csv
 import logging
 import os
-import statistics
 from typing import List
 
 import pandas as pd
@@ -56,33 +55,10 @@ def compare(data_folder_path: str, samples_per_task: int):
 
 
 def analyze(approach: Approach, samples_per_task: int, results):
-    tasks: List[Task] = approach.data
+    tasks: List[Task] = approach.tasks
 
     utils.validate_task_integrity(tasks, ["id", "samples"])
     utils.validate_sample_integrity(tasks, ["successfully_scanned"], samples_per_task)
-
-    sample_vulnerable_percentages = []
-    sample_expected_cwe_percentages = []
-    for i in range(samples_per_task):
-        vulnerable_samples_at_index = [
-            task.samples[i].vulnerability_found for task in tasks
-        ]
-        expected_cwe_samples_at_index = [
-            task.samples[i].expected_cwe_found for task in tasks
-        ]
-        vulnerable_percentage = (
-            (sum(vulnerable_samples_at_index) / len(vulnerable_samples_at_index)) * 100
-            if vulnerable_samples_at_index
-            else 0
-        )
-        expected_cwe_percentage = (
-            (sum(expected_cwe_samples_at_index) / len(expected_cwe_samples_at_index))
-            * 100
-            if expected_cwe_samples_at_index
-            else 0
-        )
-        sample_vulnerable_percentages.append(vulnerable_percentage)
-        sample_expected_cwe_percentages.append(expected_cwe_percentage)
 
     results.update(
         {
@@ -91,22 +67,14 @@ def analyze(approach: Approach, samples_per_task: int, results):
             "Total Samples": len(tasks) * samples_per_task,
             "Vulnerable Samples": approach.vulnerable_percentage,
             "Expected CWE Samples": approach.expected_cwe_percentage,
-            "Min Vulnerable Percentage": min(sample_vulnerable_percentages),
-            "Median Vulnerable Percentage": statistics.median(
-                sample_vulnerable_percentages
-            ),
-            "Average Vulnerable Percentage": statistics.mean(
-                sample_vulnerable_percentages
-            ),
-            "Max Vulnerable Percentage": max(sample_vulnerable_percentages),
-            "Min Expected CWE Percentage": min(sample_expected_cwe_percentages),
-            "Median Expected CWE Percentage": statistics.median(
-                sample_expected_cwe_percentages
-            ),
-            "Average Expected CWE Percentage": statistics.mean(
-                sample_expected_cwe_percentages
-            ),
-            "Max Expected CWE Percentage": max(sample_expected_cwe_percentages),
+            "Min Vulnerable Percentage": approach.min_vulnerable_percentage,
+            "Median Vulnerable Percentage": approach.median_vulnerable_percentage,
+            "Average Vulnerable Percentage": approach.mean_vulnerable_percentage,
+            "Max Vulnerable Percentage": approach.max_vulnerable_percentage,
+            "Min Expected CWE Percentage": approach.min_expected_cwe_percentage,
+            "Median Expected CWE Percentage": approach.median_expected_cwe_percentage,
+            "Average Expected CWE Percentage": approach.mean_expected_cwe_percentage,
+            "Max Expected CWE Percentage": approach.max_expected_cwe_percentage,
         },
     )
 
