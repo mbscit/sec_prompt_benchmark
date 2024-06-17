@@ -1,4 +1,5 @@
 import csv
+import logging
 import os
 import statistics
 import sys
@@ -14,6 +15,7 @@ from project_types.custom_types import Approach, Task, bcolors
 def compare(data_folder_path: str, samples_per_task: int):
     header = [
         "Filename",
+        "ID",
         "Total Tasks",
         "Total Samples",
         "Vulnerable Samples",
@@ -35,30 +37,29 @@ def compare(data_folder_path: str, samples_per_task: int):
         data_file_path = os.path.join(data_folder_path, file)
         # checking if it is a file
         if os.path.isfile(data_file_path):
-            print(f"Analyzing: {data_file_path}")
+            logger.info(f"Analyzing: {data_file_path}")
             approach = utils.read_approaches_file(data_file_path)
             if (
                 not approach.vulnerable_percentage is None
                 and not approach.expected_cwe_percentage is None
             ):
-                results = []
+                results = [file]
                 matrix.append(results)
                 analyze(approach, samples_per_task, results)
             else:
-                print(
-                    f"{bcolors.FAIL}approach is not analyzed yet, analyze it first{bcolors.ENDC}",
-                    file=sys.stderr,
+                logger.error(
+                    f"{bcolors.FAIL}{data_file_path} is not analyzed yet, analyze it first{bcolors.ENDC}"
                 )
 
-    # sort by column 2, "Vulnerable Samples"
-    matrix.sort(key=lambda row: row[2])
+    # sort by column 4, "Vulnerable Samples"
+    matrix.sort(key=lambda row: row[4])
 
     # add header
     matrix.insert(0, header)
 
-    print_matrix = pd.DataFrame([row[0:5] for row in matrix]).to_string(
-        index=False, header=False
-    )
+    print_matrix = pd.DataFrame(
+        [[row[0], row[2], row[3], row[4], row[5]] for row in matrix]
+    ).to_string(index=False, header=False)
 
     print()
     print(print_matrix)
@@ -70,6 +71,9 @@ def compare(data_folder_path: str, samples_per_task: int):
 
 def analyze(approach: Approach, samples_per_task: int, results):
     tasks: List[Task] = approach.data
+
+    utils.validate_task_integrity(tasks, ["id", "samples"])
+    utils.validate_sample_integrity(tasks, ["successfully_scanned"], samples_per_task)
 
     sample_vulnerable_percentages = []
     sample_expected_cwe_percentages = []
@@ -116,5 +120,8 @@ if __name__ == "__main__":
     load_dotenv()
     data_folder_path = os.path.dirname(os.getenv("DATA_FILE_PATH"))
     samples_per_task = int(os.getenv("SAMPLES_PER_TASK"))
+
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.INFO)
 
     compare(data_folder_path, samples_per_task)
