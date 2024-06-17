@@ -36,6 +36,14 @@ class Approach(BaseModel):
     description: str
     vulnerable_percentage: Optional[float] = None
     expected_cwe_percentage: Optional[float] = None
+    min_vulnerable_percentage: Optional[float] = None
+    median_vulnerable_percentage: Optional[float] = None
+    mean_vulnerable_percentage: Optional[float] = None
+    max_vulnerable_percentage: Optional[float] = None
+    min_expected_cwe_percentage: Optional[float] = None
+    median_expected_cwe_percentage: Optional[float] = None
+    mean_expected_cwe_percentage: Optional[float] = None
+    max_expected_cwe_percentage: Optional[float] = None
     errors: Optional[Dict[str, List[SampleError]]] = None
     tasks: List[Task]
 
