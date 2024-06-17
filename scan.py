@@ -79,7 +79,7 @@ class Scanner:
         subfolder = relative_path_from_root(os.path.join(working_dir, str(uuid.uuid4())))
         os.makedirs(subfolder)
 
-        tasks = approach.data
+        tasks = approach.tasks
 
         utils.validate_task_integrity(tasks, ["id", "suspected_vulnerability"])
         utils.validate_sample_integrity(tasks, ["extracted_code"], sample_index + 1)

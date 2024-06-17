@@ -37,7 +37,7 @@ class Approach(BaseModel):
     vulnerable_percentage: Optional[float] = None
     expected_cwe_percentage: Optional[float] = None
     errors: Optional[Dict[str, List[SampleError]]] = None
-    data: List[Task]
+    tasks: List[Task]
 
     def update_errors(self, step: str, new_errors: List[SampleError], sample_index: int):
         if self.errors is None:

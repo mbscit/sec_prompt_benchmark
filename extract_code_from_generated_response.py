@@ -87,7 +87,7 @@ class CodeExtractor:
 
     def extract_missing(self, approach: Approach, sample_index: int):
 
-        tasks: List[Task] = approach.data
+        tasks: List[Task] = approach.tasks
 
         utils.validate_task_integrity(tasks, ["id", "language"])
         utils.validate_sample_integrity(tasks, ["generated_response"], sample_index + 1)

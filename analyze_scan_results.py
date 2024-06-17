@@ -9,7 +9,7 @@ from project_types.custom_types import Approach, Task
 
 
 def analyze(approach: Approach, samples_per_task: int):
-    tasks: List[Task] = approach.data
+    tasks: List[Task] = approach.tasks
 
     utils.validate_task_integrity(tasks, ["id", "samples"])
     utils.validate_sample_integrity(tasks, ["successfully_scanned"], samples_per_task)

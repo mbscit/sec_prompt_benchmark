@@ -83,7 +83,7 @@ def main():
             logging.warning(
                 f"Syntax errors found in {len(syntax_errors)} samples, regenerating and rescanning affected samples")
             num_regenerations += 1
-            error_tasks = [task for task in approach.data if
+            error_tasks = [task for task in approach.tasks if
                            task.id in [error.task_id for error in syntax_errors]]
 
             for task in error_tasks:
