@@ -36,8 +36,8 @@ class Approach(BaseModel):
     description: str
     vulnerable_percentage: Optional[float] = None
     expected_cwe_percentage: Optional[float] = None
-    vulnerable_percentages: Optional[List[float]] = None
-    expected_cwe_percentages: Optional[List[float]] = None
+    sample_vulnerable_percentages: Optional[List[float]] = None
+    sample_expected_cwe_percentages: Optional[List[float]] = None
     errors: Optional[Dict[str, List[SampleError]]] = None
     tasks: List[Task]
 
@@ -62,15 +62,3 @@ language_extensions = {
     'C++': 'cpp',
     'C': 'c'
 }
-
-
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
