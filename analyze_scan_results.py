@@ -31,8 +31,8 @@ def analyze(approach: Approach, samples_per_task: int):
     approach.expected_cwe_percentage = (
                                                        total_expected_cwe_samples / total_samples) * 100 if total_samples > 0 else 0
 
-    sample_vulnerable_percentages = []
-    sample_expected_cwe_percentages = []
+    vulnerable_percentages = []
+    expected_cwe_percentages = []
     for i in range(samples_per_task):
         vulnerable_samples_at_index = [task.samples[i].vulnerability_found for task in tasks]
         expected_cwe_samples_at_index = [task.samples[i].expected_cwe_found for task in tasks]
@@ -40,18 +40,11 @@ def analyze(approach: Approach, samples_per_task: int):
             vulnerable_samples_at_index)) * 100 if vulnerable_samples_at_index else 0
         expected_cwe_percentage = (sum(expected_cwe_samples_at_index) / len(
             expected_cwe_samples_at_index)) * 100 if expected_cwe_samples_at_index else 0
-        sample_vulnerable_percentages.append(vulnerable_percentage)
-        sample_expected_cwe_percentages.append(expected_cwe_percentage)
+        vulnerable_percentages.append(vulnerable_percentage)
+        expected_cwe_percentages.append(expected_cwe_percentage)
 
-    approach.min_vulnerable_percentage = min(sample_vulnerable_percentages)
-    approach.median_vulnerable_percentage = statistics.median(sample_vulnerable_percentages)
-    approach.mean_vulnerable_percentage = statistics.mean(sample_vulnerable_percentages)
-    approach.max_vulnerable_percentage = max(sample_vulnerable_percentages)
-
-    approach.min_expected_cwe_percentage = min(sample_expected_cwe_percentages)
-    approach.median_expected_cwe_percentage = statistics.median(sample_expected_cwe_percentages)
-    approach.mean_expected_cwe_percentage = statistics.mean(sample_expected_cwe_percentages)
-    approach.max_expected_cwe_percentage = max(sample_expected_cwe_percentages)
+    approach.vulnerable_percentages = vulnerable_percentages
+    approach.expected_cwe_percentages = expected_cwe_percentages
 
     print("Summary:")
 
@@ -65,18 +58,18 @@ def analyze(approach: Approach, samples_per_task: int):
     print()
 
     print("Sample Vulnerable Percentages:")
-    print(f"Min Vulnerable Percentage: {approach.min_vulnerable_percentage:.1f}%")
-    print(f"Median Vulnerable Percentage: {approach.median_vulnerable_percentage:.1f}%")
-    print(f"Average Vulnerable Percentage: {approach.mean_vulnerable_percentage:.1f}%")
-    print(f"Max Vulnerable Percentage: {approach.max_vulnerable_percentage:.1f}%")
+    print(f"Min Vulnerable Percentage: {min(vulnerable_percentages):.1f}%")
+    print(f"Median Vulnerable Percentage: {statistics.median(vulnerable_percentages):.1f}%")
+    print(f"Average Vulnerable Percentage: {statistics.mean(vulnerable_percentages):.1f}%")
+    print(f"Max Vulnerable Percentage: {max(vulnerable_percentages):.1f}%")
 
     print()
 
     print("Sample Expected CWE Percentages:")
-    print(f"Min Expected CWE Percentage: {approach.min_expected_cwe_percentage:.1f}%")
-    print(f"Median Expected CWE Percentage: {approach.median_expected_cwe_percentage:.1f}%")
-    print(f"Average Expected CWE Percentage: {approach.mean_expected_cwe_percentage:.1f}%")
-    print(f"Max Expected CWE Percentage: {approach.max_expected_cwe_percentage:.1f}%")
+    print(f"Min Expected CWE Percentage: {min(expected_cwe_percentages):.1f}%")
+    print(f"Median Expected CWE Percentage: {statistics.median(expected_cwe_percentages):.1f}%")
+    print(f"Average Expected CWE Percentage: {statistics.mean(expected_cwe_percentages):.1f}%")
+    print(f"Max Expected CWE Percentage: {max(expected_cwe_percentages):.1f}%")
 
 
 if __name__ == "__main__":
