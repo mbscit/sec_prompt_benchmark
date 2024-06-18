@@ -1,6 +1,7 @@
 import csv
 import logging
 import os
+import statistics
 from typing import List
 
 import pandas as pd
@@ -67,14 +68,14 @@ def analyze(approach: Approach, samples_per_task: int, results):
             "Total Samples": len(tasks) * samples_per_task,
             "Vulnerable Samples": approach.vulnerable_percentage,
             "Expected CWE Samples": approach.expected_cwe_percentage,
-            "Min Vulnerable Percentage": approach.min_vulnerable_percentage,
-            "Median Vulnerable Percentage": approach.median_vulnerable_percentage,
-            "Average Vulnerable Percentage": approach.mean_vulnerable_percentage,
-            "Max Vulnerable Percentage": approach.max_vulnerable_percentage,
-            "Min Expected CWE Percentage": approach.min_expected_cwe_percentage,
-            "Median Expected CWE Percentage": approach.median_expected_cwe_percentage,
-            "Average Expected CWE Percentage": approach.mean_expected_cwe_percentage,
-            "Max Expected CWE Percentage": approach.max_expected_cwe_percentage,
+            "Min Vulnerable Percentage": min(approach.vulnerable_percentages),
+            "Median Vulnerable Percentage": statistics.median(approach.vulnerable_percentages),
+            "Average Vulnerable Percentage": statistics.mean(approach.vulnerable_percentages),
+            "Max Vulnerable Percentage": max(approach.vulnerable_percentages),
+            "Min Expected CWE Percentage": min(approach.expected_cwe_percentages),
+            "Median Expected CWE Percentage": statistics.median(approach.expected_cwe_percentages),
+            "Average Expected CWE Percentage": statistics.mean(approach.expected_cwe_percentages),
+            "Max Expected CWE Percentage": max(approach.expected_cwe_percentages),
         },
     )
 
