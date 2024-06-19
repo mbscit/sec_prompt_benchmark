@@ -56,8 +56,11 @@ def validate_task_integrity(tasks: List[Task], required_attributes: List[str]):
         raise ValueError(f"Errors in dataset - Aborting:\n" + "\n".join(errors))
 
 
-def validate_sample_integrity(tasks: List[Task], required_attributes: List[str], num_samples: int):
+def validate_sample_integrity(tasks: List[Task], required_attributes: List[str]):
     errors: List[str] = []
+
+    # take the length of the first samples array for reference
+    num_samples = len(tasks[0].samples)
 
     for i in range(num_samples):
         for task in tasks:

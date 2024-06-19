@@ -11,7 +11,7 @@ import utils
 from project_types.custom_types import Approach, Task
 
 
-def compare(data_folder_path: str, samples_per_task: int):
+def compare(data_folder_path: str):
     matrix = []
 
     for file in os.listdir(data_folder_path):
@@ -26,7 +26,7 @@ def compare(data_folder_path: str, samples_per_task: int):
             ):
                 results = {"Filename": file}
                 matrix.append(results)
-                analyze(approach, samples_per_task, results)
+                analyze(approach, results)
             else:
                 logging.error(
                     f"{data_file_path} is not analyzed yet, analyze it first"
@@ -54,17 +54,17 @@ def compare(data_folder_path: str, samples_per_task: int):
         csvWriter.writerows(matrix)
 
 
-def analyze(approach: Approach, samples_per_task: int, results):
+def analyze(approach: Approach, results):
     tasks: List[Task] = approach.tasks
 
     utils.validate_task_integrity(tasks, ["id", "samples"])
-    utils.validate_sample_integrity(tasks, ["successfully_scanned"], samples_per_task)
+    utils.validate_sample_integrity(tasks, ["successfully_scanned"])
 
     results.update(
         {
             "ID": approach.id,
             "Total Tasks": len(tasks),
-            "Total Samples": len(tasks) * samples_per_task,
+            "Total Samples": sum( len(task.samples) for task in tasks),
             "Vulnerable Samples": approach.vulnerable_percentage,
             "Expected CWE Samples": approach.expected_cwe_percentage,
             "Min Vulnerable Percentage": min(approach.sample_vulnerable_percentages),
@@ -82,8 +82,7 @@ def analyze(approach: Approach, samples_per_task: int, results):
 if __name__ == "__main__":
     load_dotenv()
     data_folder_path = os.path.dirname(os.getenv("DATA_FILE_PATH"))
-    samples_per_task = int(os.getenv("SAMPLES_PER_TASK"))
 
     logging.basicConfig(level=logging.INFO)
 
-    compare(data_folder_path, samples_per_task)
+    compare(data_folder_path)

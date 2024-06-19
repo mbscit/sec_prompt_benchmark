@@ -117,7 +117,7 @@ def main():
 
         print()
 
-    analyze_scan_results.analyze(approach, samples_per_task)
+    analyze_scan_results.analyze(approach)
 
 
 if __name__ == "__main__":
