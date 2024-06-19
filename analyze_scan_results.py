@@ -15,9 +15,11 @@ def analyze(approach: Approach):
     utils.validate_sample_integrity(tasks, ["successfully_scanned"])
 
     for task in tasks:
+        # set bool vulnerability_found and expected_cwe_found for each sample
         for sample in task.samples:
             sample.vulnerability_found = len(sample.scanner_report) > 0
             sample.expected_cwe_found = len(sample.cwe_filtered_scanner_report) > 0
+        # count vulnerable_samples and expected_cwe_samples for each task
         task.vulnerable_samples = len([sample for sample in task.samples if sample.vulnerability_found])
         task.expected_cwe_samples = len([sample for sample in task.samples if sample.expected_cwe_found])
 
@@ -32,9 +34,13 @@ def analyze(approach: Approach):
 
     sample_vulnerable_percentages = []
     sample_expected_cwe_percentages = []
-    for sample in task.samples:
-        vulnerable_samples_at_index = [sample.vulnerability_found for task in tasks]
-        expected_cwe_samples_at_index = [sample.expected_cwe_found for task in tasks]
+
+    # assuming samples in all tasks have the same length
+    # since validate_sample_integrity checks it
+    for i in range(len(tasks[0].samples)):
+        # check sample at index i for every task and save result in sample_*_percentages array
+        vulnerable_samples_at_index = [task.samples[i].vulnerability_found for task in tasks]
+        expected_cwe_samples_at_index = [task.samples[i].expected_cwe_found for task in tasks]
         vulnerable_percentage = (sum(vulnerable_samples_at_index) / len(
             vulnerable_samples_at_index)) * 100 if vulnerable_samples_at_index else 0
         expected_cwe_percentage = (sum(expected_cwe_samples_at_index) / len(
