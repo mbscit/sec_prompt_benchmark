@@ -1,1 +1,2 @@
 data/llmseceval_baseline_100.json filter=lfs diff=lfs merge=lfs -text
+data/securityeval_baseline_100.json filter=lfs diff=lfs merge=lfs -text
