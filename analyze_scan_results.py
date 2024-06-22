@@ -12,7 +12,7 @@ def analyze(approach: Approach):
     tasks: List[Task] = approach.tasks
 
     utils.validate_task_integrity(tasks, ["id", "samples"])
-    utils.validate_sample_integrity(tasks, ["successfully_scanned"])
+    utils.validate_sample_integrity(tasks, ["successfully_scanned"], -1)
 
     for task in tasks:
         # set bool vulnerability_found and expected_cwe_found for each sample

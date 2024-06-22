@@ -14,6 +14,9 @@ def main():
         data_file_path = os.path.join(data_folder_path, file)
         # checking if it is a file
         if os.path.isfile(data_file_path):
+            print()
+            print(f"processing file: {data_file_path}")
+            print()
             process_file(data_file_path)
 
 
