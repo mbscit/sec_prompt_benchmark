@@ -58,7 +58,7 @@ def analyze(approach: Approach, results):
     tasks: List[Task] = approach.tasks
 
     utils.validate_task_integrity(tasks, ["id", "samples"])
-    utils.validate_sample_integrity(tasks, ["successfully_scanned"], -1)
+    utils.validate_sample_integrity(tasks, ["successfully_scanned"])
 
     results.update(
         {
