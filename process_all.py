@@ -31,6 +31,15 @@ def retry_on_rate_limit(func, *args, **kwargs):
                 raise
 
 
+def save_if_changed(file_path, approach, previous_approach_dict):
+    current_approach_dict = approach.dict(exclude_defaults=True)
+    if current_approach_dict != previous_approach_dict:
+        with open(file_path, 'w') as file:
+            json.dump(current_approach_dict, file, indent=4)
+        return current_approach_dict
+    return previous_approach_dict
+
+
 def main():
     load_dotenv()
     data_file_path = os.getenv('DATA_FILE_PATH')
@@ -41,6 +50,7 @@ def main():
         data = json.load(file)
 
     approach = Approach(**data)
+    previous_approach_dict = approach.dict(exclude_defaults=True)
 
     for i in range(samples_per_task):
         print(f"Starting execution for sample {i}")
@@ -49,10 +59,8 @@ def main():
         st = time.time()
         response_generator = ResponseGenerator()
         retry_on_rate_limit(response_generator.generate_missing, approach, i)
-        generated_data_file_path = f"{file_name}{file_extension}"
         et = time.time()
-        with open(generated_data_file_path, 'w') as file:
-            json.dump(approach.dict(exclude_defaults=True), file, indent=4)
+        previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
         print(f"Response generation for sample {i} finished, time: {(et - st):.2f}s")
 
         print()
@@ -61,10 +69,8 @@ def main():
         st = time.time()
         code_extractor = CodeExtractor()
         retry_on_rate_limit(code_extractor.extract_missing, approach, i)
-        extracted_data_file_path = f"{file_name}{file_extension}"
         et = time.time()
-        with open(extracted_data_file_path, 'w') as file:
-            json.dump(approach.dict(exclude_defaults=True), file, indent=4)
+        previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
         print(f"Response extraction for sample {i} finished, time: {(et - st):.2f}s")
 
         print()
@@ -98,7 +104,7 @@ def main():
             code_extractor = CodeExtractor()
             scanner = Scanner()
 
-            # re-genereate and re-scan affected samples
+            # re-generate and re-scan affected samples
             retry_on_rate_limit(response_generator.generate_missing, approach, i)
             retry_on_rate_limit(code_extractor.extract_missing, approach, i)
             scanner.scan_samples(approach, i)
@@ -109,10 +115,8 @@ def main():
             logging.error(f"""Failed to resolve syntax errors in {len(syntax_errors)} samples after 3 attempts. 
             Check the error field in data file for more information.""")
 
-        scanned_data_file_path = f"{file_name}{file_extension}"
         et = time.time()
-        with open(scanned_data_file_path, 'w') as file:
-            json.dump(approach.dict(exclude_defaults=True), file, indent=4)
+        previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
         print(f"Scan for sample {i} finished, time: {(et - st):.1f}s")
 
         print()
