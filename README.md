@@ -2,14 +2,18 @@
 
 Collection of python scripts and datasets to test strategies for generating secure code with LLMs.  
 Currently uses OpenAIs Chat-GPT3.5 and datasets from the papers [LLMSecEval][1] and [SecurityEval][2].  
-An attempt consists of a list of tasks, one task for every prompt from the datasets.  
+The generated code is scanned using [Semgrep CLI][3].
+
+An attempt consists of a list of tasks, one task for every prompt from the datasets.
 A task consists of a list of samples, code for the same prompt is generated as many times as defined in `.env` in the variable `SAMPLES_PER_TASK`.
 Attempts can be compared with each other, a summary is printed in console and details are written to a CSV file.
 
 ## Install Requirements
 
-`pip install -r requirements.txt`  
-`export OPENAI_API_KEY=<YOURKEY>`
+* Install semgrep: `python3 -m pip install semgrep`
+* For more accurate scan results: `semgrep login`
+* Install requirements: `pip install -r requirements.txt`
+* Set OpenAI API key: `export OPENAI_API_KEY=<YOURKEY>`
 
 ## Run a new Attempt
 
@@ -23,5 +27,8 @@ Attempts can be compared with each other, a summary is printed in console and de
 
 * `python3 -m compare_attempts`
 
+<!-- links -->
+
 [1]: https://arxiv.org/abs/2303.09384
 [2]: https://github.com/s2e-lab/SecurityEval
+[3]: https://semgrep.dev/
