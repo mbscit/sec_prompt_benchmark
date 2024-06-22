@@ -82,7 +82,7 @@ class Scanner:
         tasks = approach.tasks
 
         utils.validate_task_integrity(tasks, ["id", "suspected_vulnerability"])
-        utils.validate_sample_integrity(tasks, ["extracted_code"])
+        utils.validate_sample_integrity(tasks, ["extracted_code"], sample_index + 1)
 
         if all(sample.successfully_scanned for task in tasks for sample in task.samples if
                sample.index == sample_index):

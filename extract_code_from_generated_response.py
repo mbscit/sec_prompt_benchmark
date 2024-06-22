@@ -90,7 +90,7 @@ class CodeExtractor:
         tasks: List[Task] = approach.tasks
 
         utils.validate_task_integrity(tasks, ["id", "language"])
-        utils.validate_sample_integrity(tasks, ["generated_response"])
+        utils.validate_sample_integrity(tasks, ["generated_response"], sample_index + 1)
 
         if all(any(sample.index == sample_index and sample.extracted_code for sample in task.samples) for task in
                tasks):
