@@ -122,6 +122,7 @@ def main():
         print()
 
     analyze_scan_results.analyze(approach)
+    previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
 
 if __name__ == "__main__":
