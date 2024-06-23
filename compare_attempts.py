@@ -32,7 +32,7 @@ def compare(data_folder_path: str):
                     f"{data_file_path} is not analyzed yet, analyze it first"
                 )
 
-    matrix.sort(key=lambda row: row["Vulnerable Samples"], reverse=True)
+    matrix.sort(key=lambda row: row["Vulnerable Samples"])
 
     print_matrix = pd.DataFrame.from_records(
         matrix,
