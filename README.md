@@ -10,6 +10,7 @@ Attempts can be compared with each other, a summary is printed in console and de
 
 ## Install Requirements
 
+* Install Git LFS: https://git-lfs.com/
 * Install semgrep: `python3 -m pip install semgrep`
 * For more accurate scan results: `semgrep login`
 * Install requirements: `pip install -r requirements.txt`
