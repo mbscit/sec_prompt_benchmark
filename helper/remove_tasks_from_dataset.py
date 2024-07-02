@@ -9,7 +9,7 @@ import utils
 
 
 load_dotenv()
-dataset_file_path = os.getenv("DATASET_FILE_PATH")
+dataset_file_path = utils.relative_path_from_root(os.getenv("DATASET_FILE_PATH"))
 
 remove_tasks = [
     "asdf",

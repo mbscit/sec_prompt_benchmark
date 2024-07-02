@@ -9,8 +9,8 @@ import utils
 
 
 load_dotenv()
-data_folder_path = os.path.dirname(os.getenv("DATA_FILE_PATH"))
-dataset_file_path = os.getenv("DATASET_FILE_PATH")
+data_folder_path = os.path.dirname(utils.relative_path_from_root(os.getenv("DATA_FILE_PATH")))
+dataset_file_path = utils.relative_path_from_root(os.getenv("DATASET_FILE_PATH"))
 
 # load all tasks from dataset to a map
 tasks = {}
