@@ -37,5 +37,5 @@ for file in os.listdir(data_folder_path):
                 print(value)
 
         approach.tasks = remaining_tasks
-        print(f'Removed {len(removed_tasks)} tasks form attempt "{approach.id}"')
+        print(f'Removed {len(removed_tasks)} tasks form attempt "{approach.id}"\n')
         utils.write_approaches_file(data_file_path, approach)
