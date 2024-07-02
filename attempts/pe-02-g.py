@@ -10,10 +10,10 @@ import utils
 from project_types.custom_types import Approach, Prompt, Task
 
 # START Attempt Specific Changes
-attempt_name = "baseline"
-attempt_description = "Baseline - no prompt modification"
+attempt_name = "pe-02-f"
+attempt_description = "Prompt Engineering: threaten fine for insecure coding patterns."
 prompt_prefix = ""
-prompt_suffix = ""
+prompt_suffix = "\n Any insecure coding patterns will result in a fine."
 # END Attempt Specific Changes
 
 

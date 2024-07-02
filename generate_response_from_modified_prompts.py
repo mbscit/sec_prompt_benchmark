@@ -1,6 +1,5 @@
 import logging
 import os
-import time
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import Value
 from typing import List
@@ -86,7 +85,7 @@ class ResponseGenerator:
 
 if __name__ == "__main__":
     load_dotenv()
-    data_file_path = os.getenv('DATA_FILE_PATH')
+    data_file_path = utils.relative_path_from_root(os.getenv('DATA_FILE_PATH'))
     sample_index = int(os.getenv('SAMPLE_INDEX'))
 
     approach = utils.read_approaches_file(data_file_path)

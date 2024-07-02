@@ -79,7 +79,7 @@ def analyze(approach: Approach):
 
 if __name__ == "__main__":
     load_dotenv()
-    data_file_path = os.getenv('DATA_FILE_PATH')
+    data_file_path = utils.relative_path_from_root(os.getenv('DATA_FILE_PATH'))
 
     approach = utils.read_approaches_file(data_file_path)
 

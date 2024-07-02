@@ -3,12 +3,13 @@ import time
 
 from dotenv import load_dotenv
 
+import utils
 from process_one import process_file
 
 
 def main():
     load_dotenv()
-    data_folder_path = os.path.dirname(os.getenv("DATA_FILE_PATH"))
+    data_folder_path = os.path.dirname(utils.relative_path_from_root(os.getenv("DATA_FILE_PATH")))
 
     for file in os.listdir(data_folder_path):
         data_file_path = os.path.join(data_folder_path, file)

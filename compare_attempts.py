@@ -81,7 +81,7 @@ def analyze(approach: Approach, results):
 
 if __name__ == "__main__":
     load_dotenv()
-    data_folder_path = os.path.dirname(os.getenv("DATA_FILE_PATH"))
+    data_folder_path = os.path.dirname(utils.relative_path_from_root(os.getenv("DATA_FILE_PATH")))
 
     logging.basicConfig(level=logging.INFO)
 

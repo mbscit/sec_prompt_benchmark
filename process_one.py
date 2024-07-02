@@ -7,6 +7,7 @@ import openai
 from dotenv import load_dotenv
 
 import analyze_scan_results
+import utils
 from extract_code_from_generated_response import CodeExtractor
 from generate_response_from_modified_prompts import ResponseGenerator
 from project_types.custom_types import Approach
@@ -126,7 +127,7 @@ def process_file(data_file_path):
 
 def main():
     load_dotenv()
-    data_file_path = os.getenv('DATA_FILE_PATH')
+    data_file_path = utils.relative_path_from_root(os.getenv('DATA_FILE_PATH'))
     process_file(data_file_path)
 
 

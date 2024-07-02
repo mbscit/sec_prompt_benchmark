@@ -8,7 +8,7 @@ sys.path.append("../sec_prompt_benchmark")
 import utils
 
 load_dotenv()
-data_file_path = os.getenv('DATA_FILE_PATH')
+data_file_path = utils.relative_path_from_root(os.getenv('DATA_FILE_PATH'))
 
 print(f"removing scan results from: {data_file_path}")
 
