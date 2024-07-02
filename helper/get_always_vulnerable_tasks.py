@@ -33,4 +33,4 @@ for file in os.listdir(data_folder_path):
 
 print(f"Tasks that have ALWAYS been classified as vulnerable (count: {len(tasks)}): ")
 for key in tasks:
-    print(key)
+    print(f"\"{key}\",")
