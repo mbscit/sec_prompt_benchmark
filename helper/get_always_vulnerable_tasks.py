@@ -31,5 +31,6 @@ for file in os.listdir(data_folder_path):
                 if sample.vulnerability_found == False:
                     tasks.pop(task.id, None)
 
+print(f"Tasks that have ALWAYS been classified as vulnerable (count: {len(tasks)}): ")
 for key in tasks:
     print(key)
