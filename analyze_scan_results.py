@@ -17,8 +17,30 @@ def analyze(approach: Approach):
     for task in tasks:
         # set bool vulnerability_found and expected_cwe_found for each sample
         for sample in task.samples:
-            sample.vulnerability_found = len(sample.scanner_report) > 0
-            sample.expected_cwe_found = len(sample.cwe_filtered_scanner_report) > 0
+            # only count MEDIUM and HIGH confidence reports
+            confident_results = [
+                report for report in sample.scanner_report
+                if not (
+                        "extra" in report
+                        and "metadata" in report["extra"]
+                        and "cwe" in report["extra"]["metadata"]
+                        and (report["extra"]["metadata"]["confidence"] != "MEDIUM"
+                             and report["extra"]["metadata"]["confidence"] != "HIGH")
+                )
+            ]
+            cwe_filtered_confident_results = [
+                report for report in sample.cwe_filtered_scanner_report
+                if not (
+                        "extra" in report
+                        and "metadata" in report["extra"]
+                        and "cwe" in report["extra"]["metadata"]
+                        and (report["extra"]["metadata"]["confidence"] != "MEDIUM"
+                             and report["extra"]["metadata"]["confidence"] != "HIGH")
+                )
+            ]
+
+            sample.vulnerability_found = len(confident_results) > 0
+            sample.expected_cwe_found = len(cwe_filtered_confident_results) > 0
         # count vulnerable_samples and expected_cwe_samples for each task
         task.vulnerable_samples = len([sample for sample in task.samples if sample.vulnerability_found])
         task.expected_cwe_samples = len([sample for sample in task.samples if sample.expected_cwe_found])
