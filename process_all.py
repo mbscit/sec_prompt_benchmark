@@ -4,6 +4,7 @@ import time
 from dotenv import load_dotenv
 
 import utils
+from compare_attempts import compare
 from process_one import process_file
 
 
@@ -24,5 +25,10 @@ def main():
 if __name__ == "__main__":
     st = time.time()
     main()
+
+    data_folder_path = os.path.dirname(utils.relative_path_from_root(os.getenv("DATA_FILE_PATH")))
+
+    compare(data_folder_path)
     et = time.time()
     print(f"Total execution time: {(et - st):.2f}s")
+
