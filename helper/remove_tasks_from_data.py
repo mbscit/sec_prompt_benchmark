@@ -11,20 +11,12 @@ load_dotenv()
 data_folder_path = os.path.dirname(utils.relative_path_from_root(os.getenv("DATA_FILE_PATH")))
 
 tasks_to_remove = [
-    "CWE-416_UAF-1c",
-    "CWE-502_DUD-3a",
-    "CWE-502_DUD-3c",
-    "CWE-732_IPA-1b",
-    "CWE-79_INI-3c",
-    "CWE-89_SQI-1a",
-    "CWE-89_SQI-1b",
-    "CWE-89_SQI-1c",
-    "CWE-89_SQI-2b",
-    "CWE-89_SQI-2c",
-    "CWE-89_SQI-3b",
-    "CWE-89_SQI-3c",
-    "CWE-117_sonar_1",
-    "CWE-319_author_1",
+    "CWE-22_ILP-2a",
+    "CWE-22_ILP-3c",
+    "CWE-78_INS-2b",
+    "CWE-377_codeql_1",
+    "CWE-601_sonar_1",
+    "CWE-611_author_1",
 ]
 
 for file in os.listdir(data_folder_path):
