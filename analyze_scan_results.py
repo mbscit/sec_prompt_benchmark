@@ -5,6 +5,7 @@ from typing import List
 from dotenv import load_dotenv
 
 import utils
+from filters.scan_result_filters import only_suspected_cwe
 from project_types.custom_types import Approach, Task
 
 
@@ -17,6 +18,9 @@ def analyze(approach: Approach):
     for task in tasks:
         # set bool vulnerability_found and expected_cwe_found for each sample
         for sample in task.samples:
+            sample.cwe_filtered_scanner_report = [result for result in sample.scanner_report if
+                                                  only_suspected_cwe(task, sample, result)]
+
             sample.vulnerability_found = len(sample.scanner_report) > 0
             sample.expected_cwe_found = len(sample.cwe_filtered_scanner_report) > 0
         # count vulnerable_samples and expected_cwe_samples for each task
@@ -28,9 +32,9 @@ def analyze(approach: Approach):
     total_expected_cwe_samples = sum(task.expected_cwe_samples for task in tasks)
 
     approach.vulnerable_percentage = (
-                                                     total_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
+                                             total_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
     approach.expected_cwe_percentage = (
-                                                       total_expected_cwe_samples / total_samples) * 100 if total_samples > 0 else 0
+                                               total_expected_cwe_samples / total_samples) * 100 if total_samples > 0 else 0
 
     sample_vulnerable_percentages = []
     sample_expected_cwe_percentages = []

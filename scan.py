@@ -10,7 +10,6 @@ from typing import List
 from dotenv import load_dotenv
 
 import utils
-from filters.scan_result_filters import only_suspected_cwe
 from project_types.custom_types import Approach, Task, language_extensions, SampleError, Sample
 from utils import relative_path_from_root
 
@@ -38,7 +37,7 @@ class Scanner:
         with open(file_path, 'w') as file:
             file.write(sample.extracted_code)
 
-    def extract_scan_results(self, semgrep_result, task: Task, sample, folder: str):
+    def extract_scan_results(self, semgrep_result, task: Task, folder: str):
         file_name = self.get_file_name(task)
         file_path = os.path.join(folder, file_name)
         normpath = os.path.normpath(file_path)
@@ -50,9 +49,7 @@ class Scanner:
             elif isinstance(result['extra']['metadata']['cwe'], list):
                 result['extra']['metadata']['cwe'] = [re.sub(r'CWE-0+', 'CWE-', cwe) for cwe in result['extra']['metadata']['cwe']]
 
-        cwe_filtered_results = [result for result in file_specific_results if only_suspected_cwe(task, sample, result)]
-
-        return file_specific_results, cwe_filtered_results
+        return file_specific_results
 
     def extract_scan_errors(self, semgrep_result, task: Task, sample_index: int, folder: str):
         file_name = self.get_file_name(task)
@@ -105,11 +102,7 @@ class Scanner:
                     try:
                         sample: Sample = next((sample for sample in task.samples if sample.index == sample_index), None)
                         file_specific_errors = self.extract_scan_errors(json_output, task, sample_index, subfolder)
-                        file_specific_results, cwe_filtered_results = self.extract_scan_results(json_output, task, sample,
-                                                                                                subfolder)
-
-                        sample.scanner_report = file_specific_results
-                        sample.cwe_filtered_scanner_report = cwe_filtered_results
+                        sample.scanner_report = self.extract_scan_results(json_output, task, subfolder)
 
                         if not file_specific_errors:
                             sample.successfully_scanned = True
@@ -117,9 +110,6 @@ class Scanner:
                         else:
                             self.error_samples += 1
 
-                        if cwe_filtered_results:
-                            logging.info(
-                                f"Suspected vulnerability found in {task.id} sample {sample_index}: {cwe_filtered_results}")
                     except Exception as e:
                         logging.error(f"Error processing results for {task.id} sample {sample_index}: {e}")
                         self.errors.append(SampleError(task_id=task.id, sample_index=sample_index, error=str(e)))
