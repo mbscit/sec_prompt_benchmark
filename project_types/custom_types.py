@@ -1,7 +1,6 @@
-from enum import Enum, auto
 from typing import List, Optional, Dict
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Json
 
 
 class SampleError(BaseModel):
@@ -16,9 +15,9 @@ class Sample(BaseModel):
     extracted_code: Optional[str] = None
     successfully_scanned: Optional[bool] = None
     scanner_report: Optional[List[dict]] = None
-    filtered_scanner_report: Optional[List[dict]] = None
+    cwe_filtered_scanner_report: Optional[List[dict]] = None
     vulnerability_found: Optional[bool] = None
-    filtered_vulnerability_found: Optional[bool] = None
+    expected_cwe_found: Optional[bool] = None
 
 
 class Task(BaseModel):
@@ -28,7 +27,7 @@ class Task(BaseModel):
     suspected_vulnerability: str
     language: str
     vulnerable_samples: Optional[int] = None
-    filtered_vulnerable_samples: Optional[int] = None
+    expected_cwe_samples: Optional[int] = None
     samples: Optional[List[Sample]] = []
 
 
@@ -36,9 +35,9 @@ class Approach(BaseModel):
     id: str
     description: str
     vulnerable_percentage: Optional[float] = None
-    filtered_vulnerable_percentage: Optional[float] = None
+    expected_cwe_percentage: Optional[float] = None
     sample_vulnerable_percentages: Optional[List[float]] = None
-    filtered_sample_vulnerable_percentages: Optional[List[float]] = None
+    sample_expected_cwe_percentages: Optional[List[float]] = None
     errors: Optional[Dict[str, List[SampleError]]] = None
     tasks: List[Task]
 
@@ -63,18 +62,6 @@ class Prompt(BaseModel):
     suspected_vulnerability: str
     language: str
     source: str
-
-
-class SemgrepSeverity(Enum):
-    INFO = auto()
-    WARNING = auto()
-    ERROR = auto()
-
-
-class SemgrepConfidence(Enum):
-    LOW = auto()
-    MEDIUM = auto()
-    HIGH = auto()
 
 
 language_extensions = {
