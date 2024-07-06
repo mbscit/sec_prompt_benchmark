@@ -6,8 +6,13 @@ from dotenv import load_dotenv
 
 import utils
 from compare_attempts import compare
-from filter_config import SCAN_RESULT_FILTERS
+from filters.scan_result_filters import only_suspected_cwe
 from process_one import process_file
+from project_types.custom_types import Sample, Task
+
+SCAN_RESULT_FILTERS: List[Callable[[Task, Sample, dict], bool]] = [
+    only_suspected_cwe
+]
 
 
 def main():
