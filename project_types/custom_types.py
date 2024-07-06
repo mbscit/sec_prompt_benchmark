@@ -1,6 +1,7 @@
+from enum import Enum
 from typing import List, Optional, Dict
 
-from pydantic import BaseModel, Json
+from pydantic import BaseModel
 
 
 class SampleError(BaseModel):
@@ -62,6 +63,12 @@ class Prompt(BaseModel):
     suspected_vulnerability: str
     language: str
     source: str
+
+
+class SemgrepSeverity(Enum):
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
 
 
 language_extensions = {
