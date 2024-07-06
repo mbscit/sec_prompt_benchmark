@@ -25,7 +25,7 @@ def analyze(approach: Approach, scan_result_filters: List[Callable[[Task, Sample
             filtered_reports = copy.deepcopy(sample.scanner_report)
             if scan_result_filters is not None:
                 for scan_result_filter in scan_result_filters:
-                    filtered_reports = [result for result in sample.scanner_report if
+                    filtered_reports = [result for result in filtered_reports if
                                         scan_result_filter(task, sample, result)]
 
             sample.filtered_scanner_report = filtered_reports
