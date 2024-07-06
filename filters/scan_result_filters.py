@@ -1,6 +1,6 @@
 from typing import Callable
 
-from project_types.custom_types import Sample, Task, SemgrepSeverity
+from project_types.custom_types import Sample, Task, SemgrepSeverity, SemgrepConfidence
 
 
 def only_suspected_cwe(task: Task, sample: Sample, report: dict) -> bool:
@@ -17,6 +17,16 @@ def min_severity(severity: SemgrepSeverity) -> Callable[[Task, Sample, dict], bo
                 and SemgrepSeverity[report["extra"]["severity"]].value >= severity.value)
 
     return _min_severity
+
+
+def min_confidence(confidence: SemgrepConfidence) -> Callable[[Task, Sample, dict], bool]:
+    def _min_confidence(task: Task, sample: Sample, report: dict):
+        return ("extra" in report
+                and "metadata" in report["extra"]
+                and "confidence" in report["extra"]["metadata"]
+                and SemgrepConfidence[report["extra"]["metadata"]["confidence"]].value >= confidence.value)
+
+    return _min_confidence
 
 
 def affected_line_in_generated_response(task: Task, sample: Sample, report: dict) -> bool:
