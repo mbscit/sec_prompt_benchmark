@@ -17,3 +17,10 @@ def min_severity(severity: SemgrepSeverity) -> Callable[[Task, Sample, dict], bo
                 and SemgrepSeverity[report["extra"]["severity"]].value >= severity.value)
 
     return _min_severity
+
+
+def affected_line_in_generated_response(task: Task, sample: Sample, report: dict) -> bool:
+    return (
+            "extra" in report
+            and "lines" in report["extra"]
+            and report["extra"]["lines"].strip() in sample.generated_response)
