@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, List
 
 from project_types.custom_types import Sample, Task, SemgrepSeverity, SemgrepConfidence
 
@@ -34,3 +34,17 @@ def affected_line_in_generated_response(task: Task, sample: Sample, report: dict
             "extra" in report
             and "lines" in report["extra"]
             and report["extra"]["lines"].strip() in sample.generated_response)
+
+
+def ignore_cwes(cwes_to_ignore: List[str]) -> Callable[[Task, Sample, dict], bool]:
+    def _ignore_cwes(task: Task, sample: Sample, report: dict):
+        if isinstance(report['extra']['metadata']['cwe'], str):
+            found_cwe: str = report['extra']['metadata']['cwe']
+            return not any(ignored_cwe in found_cwe for ignored_cwe in cwes_to_ignore)
+        if isinstance(report['extra']['metadata']['cwe'], list):
+            found_cwes: List[str] = report['extra']['metadata']['cwe']
+            for ignored_cwe in cwes_to_ignore:
+                found_cwes = [cwe for cwe in found_cwes if ignored_cwe not in cwe]
+            return len(found_cwes) > 0
+
+    return _ignore_cwes
