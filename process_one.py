@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+from typing import List, Callable
 
 import openai
 from dotenv import load_dotenv
@@ -10,7 +11,7 @@ import analyze_scan_results
 import utils
 from extract_code_from_generated_response import CodeExtractor
 from generate_response_from_modified_prompts import ResponseGenerator
-from project_types.custom_types import Approach
+from project_types.custom_types import Approach, Task, Sample
 from scan import Scanner
 
 
@@ -41,7 +42,7 @@ def save_if_changed(file_path, approach, previous_approach_dict):
     return previous_approach_dict
 
 
-def process_file(data_file_path):
+def process_file(data_file_path, scan_result_filters: List[Callable[[Task, Sample, dict], bool]] = None):
     load_dotenv()
     samples_per_task = int(os.getenv('SAMPLES_PER_TASK'))
 
@@ -97,7 +98,7 @@ def process_file(data_file_path):
                 sample.generated_response = None
                 sample.extracted_code = None
                 sample.scanner_report = None
-                sample.cwe_filtered_scanner_report = None
+                sample.filtered_scanner_report = None
 
             # re-initialize workers to reset statistics
             response_generator = ResponseGenerator()
@@ -121,7 +122,7 @@ def process_file(data_file_path):
 
         print()
 
-    analyze_scan_results.analyze(approach)
+    analyze_scan_results.analyze(approach, scan_result_filters)
     previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
 
