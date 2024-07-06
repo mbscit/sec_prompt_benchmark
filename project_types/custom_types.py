@@ -14,8 +14,8 @@ class Sample(BaseModel):
     generated_response: Optional[str] = None
     extracted_code: Optional[str] = None
     successfully_scanned: Optional[bool] = None
-    scanner_report: Optional[str] | Optional[List] | Optional[Json] = None
-    cwe_filtered_scanner_report: Optional[str] | Optional[List] | Optional[Json] = None
+    scanner_report: Optional[List[dict]] = None
+    cwe_filtered_scanner_report: Optional[List[dict]] = None
     vulnerability_found: Optional[bool] = None
     expected_cwe_found: Optional[bool] = None
 
