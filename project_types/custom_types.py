@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 from typing import List, Optional, Dict
 
 from pydantic import BaseModel
@@ -66,9 +66,15 @@ class Prompt(BaseModel):
 
 
 class SemgrepSeverity(Enum):
-    INFO = "INFO"
-    WARNING = "WARNING"
-    ERROR = "ERROR"
+    INFO = auto()
+    WARNING = auto()
+    ERROR = auto()
+
+
+class SemgrepConfidence(Enum):
+    LOW = auto()
+    MEDIUM = auto()
+    HIGH = auto()
 
 
 language_extensions = {
