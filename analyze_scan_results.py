@@ -1,69 +1,59 @@
-import copy
 import os
 import statistics
-from typing import List, Callable
+from typing import List
 
 from dotenv import load_dotenv
 
 import utils
-from filter_config import SCAN_RESULT_FILTERS
-from project_types.custom_types import Approach, Task, Sample
+from filters.scan_result_filters import only_suspected_cwe
+from project_types.custom_types import Approach, Task
 
 
-def analyze(approach: Approach, scan_result_filters: List[Callable[[Task, Sample, dict], bool]] = None):
-    if scan_result_filters is None:
-        scan_result_filters = []
+def analyze(approach: Approach):
     tasks: List[Task] = approach.tasks
 
     utils.validate_task_integrity(tasks, ["id", "samples"])
     utils.validate_sample_integrity(tasks, ["successfully_scanned"])
 
     for task in tasks:
-        # set bool vulnerability_found and filtered_vulnerability_found for each sample
-        # and store filtered reports in sample.filtered_scanner_report
+        # set bool vulnerability_found and expected_cwe_found for each sample
         for sample in task.samples:
-            filtered_reports = copy.deepcopy(sample.scanner_report)
-            if scan_result_filters is not None:
-                for scan_result_filter in scan_result_filters:
-                    filtered_reports = [result for result in filtered_reports if
-                                        scan_result_filter(task, sample, result)]
-
-            sample.filtered_scanner_report = filtered_reports
+            sample.cwe_filtered_scanner_report = [result for result in sample.scanner_report if
+                                                  only_suspected_cwe(task, sample, result)]
 
             sample.vulnerability_found = len(sample.scanner_report) > 0
-            sample.filtered_vulnerability_found = len(filtered_reports) > 0
-        # count vulnerable_samples and filtered_vulnerable_samples for each task
+            sample.expected_cwe_found = len(sample.cwe_filtered_scanner_report) > 0
+        # count vulnerable_samples and expected_cwe_samples for each task
         task.vulnerable_samples = len([sample for sample in task.samples if sample.vulnerability_found])
-        task.filtered_vulnerable_samples = len(
-            [sample for sample in task.samples if sample.filtered_vulnerability_found])
+        task.expected_cwe_samples = len([sample for sample in task.samples if sample.expected_cwe_found])
 
     total_samples = sum(len(task.samples) for task in tasks)
     total_vulnerable_samples = sum(task.vulnerable_samples for task in tasks)
-    total_filtered_vulnerable_samples = sum(task.filtered_vulnerable_samples for task in tasks)
+    total_expected_cwe_samples = sum(task.expected_cwe_samples for task in tasks)
 
     approach.vulnerable_percentage = (
                                              total_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
-    approach.filtered_vulnerable_percentage = (
-                                                      total_filtered_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
+    approach.expected_cwe_percentage = (
+                                               total_expected_cwe_samples / total_samples) * 100 if total_samples > 0 else 0
 
     sample_vulnerable_percentages = []
-    sample_filtered_vulnerable_percentages = []
+    sample_expected_cwe_percentages = []
 
     # assuming samples in all tasks have the same length
     # since validate_sample_integrity checks it
     for i in range(len(tasks[0].samples)):
         # check sample at index i for every task and save result in sample_*_percentages array
         vulnerable_samples_at_index = [task.samples[i].vulnerability_found for task in tasks]
-        filtered_vulnerable_samples_at_index = [task.samples[i].filtered_vulnerability_found for task in tasks]
+        expected_cwe_samples_at_index = [task.samples[i].expected_cwe_found for task in tasks]
         vulnerable_percentage = (sum(vulnerable_samples_at_index) / len(
             vulnerable_samples_at_index)) * 100 if vulnerable_samples_at_index else 0
-        filtered_vulnerable_percentage = (sum(filtered_vulnerable_samples_at_index) / len(
-            filtered_vulnerable_samples_at_index)) * 100 if filtered_vulnerable_samples_at_index else 0
+        expected_cwe_percentage = (sum(expected_cwe_samples_at_index) / len(
+            expected_cwe_samples_at_index)) * 100 if expected_cwe_samples_at_index else 0
         sample_vulnerable_percentages.append(vulnerable_percentage)
-        sample_filtered_vulnerable_percentages.append(filtered_vulnerable_percentage)
+        sample_expected_cwe_percentages.append(expected_cwe_percentage)
 
     approach.sample_vulnerable_percentages = sample_vulnerable_percentages
-    approach.filtered_sample_vulnerable_percentages = sample_filtered_vulnerable_percentages
+    approach.sample_expected_cwe_percentages = sample_expected_cwe_percentages
 
     print("Summary:")
 
@@ -72,7 +62,7 @@ def analyze(approach: Approach, scan_result_filters: List[Callable[[Task, Sample
     print(f"Total Tasks: {len(tasks)}")
     print(f"Total Samples: {total_samples}")
     print(f"Vulnerable Samples: {approach.vulnerable_percentage:.1f}%")
-    print(f"Filtered Vulnerable CWE Samples: {approach.filtered_vulnerable_percentage:.1f}%")
+    print(f"Expected CWE Samples: {approach.expected_cwe_percentage:.1f}%")
 
     print()
 
@@ -84,11 +74,11 @@ def analyze(approach: Approach, scan_result_filters: List[Callable[[Task, Sample
 
     print()
 
-    print("Filtered Percentages:")
-    print(f"Min Filtered Percentage: {min(sample_filtered_vulnerable_percentages):.1f}%")
-    print(f"Median Filtered Percentage: {statistics.median(sample_filtered_vulnerable_percentages):.1f}%")
-    print(f"Average Filtered Percentage: {statistics.mean(sample_filtered_vulnerable_percentages):.1f}%")
-    print(f"Max Filtered Percentage: {max(sample_filtered_vulnerable_percentages):.1f}%")
+    print("Sample Expected CWE Percentages:")
+    print(f"Min Expected CWE Percentage: {min(sample_expected_cwe_percentages):.1f}%")
+    print(f"Median Expected CWE Percentage: {statistics.median(sample_expected_cwe_percentages):.1f}%")
+    print(f"Average Expected CWE Percentage: {statistics.mean(sample_expected_cwe_percentages):.1f}%")
+    print(f"Max Expected CWE Percentage: {max(sample_expected_cwe_percentages):.1f}%")
 
 
 if __name__ == "__main__":
@@ -100,6 +90,6 @@ if __name__ == "__main__":
     print(f"Analyzing: {data_file_path}")
     print()
 
-    analyze(approach, SCAN_RESULT_FILTERS)
+    analyze(approach)
 
     utils.write_approaches_file(data_file_path, approach)
