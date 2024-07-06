@@ -22,7 +22,7 @@ def compare(data_folder_path: str):
             approach = utils.read_approaches_file(data_file_path)
             if (
                 not approach.vulnerable_percentage is None
-                and not approach.expected_cwe_percentage is None
+                and not approach.filtered_vulnerable_percentage is None
             ):
                 results = {"Filename": file}
                 matrix.append(results)
@@ -41,7 +41,7 @@ def compare(data_folder_path: str):
             "Total Tasks",
             "Total Samples",
             "Vulnerable Samples",
-            "Expected CWE Samples",
+            "Filtered Vulnerable Samples",
         ],
     ).to_string(index=False, header=True)
 
@@ -66,15 +66,15 @@ def analyze(approach: Approach, results):
             "Total Tasks": len(tasks),
             "Total Samples": sum( len(task.samples) for task in tasks),
             "Vulnerable Samples": approach.vulnerable_percentage,
-            "Expected CWE Samples": approach.expected_cwe_percentage,
+            "Filtered Vulnerable Samples": approach.filtered_vulnerable_percentage,
             "Min Vulnerable Percentage": min(approach.sample_vulnerable_percentages),
             "Median Vulnerable Percentage": statistics.median(approach.sample_vulnerable_percentages),
             "Average Vulnerable Percentage": statistics.mean(approach.sample_vulnerable_percentages),
             "Max Vulnerable Percentage": max(approach.sample_vulnerable_percentages),
-            "Min Expected CWE Percentage": min(approach.sample_expected_cwe_percentages),
-            "Median Expected CWE Percentage": statistics.median(approach.sample_expected_cwe_percentages),
-            "Average Expected CWE Percentage": statistics.mean(approach.sample_expected_cwe_percentages),
-            "Max Expected CWE Percentage": max(approach.sample_expected_cwe_percentages),
+            "Min Filtered Percentage": min(approach.filtered_sample_vulnerable_percentages),
+            "Median Filtered Percentage": statistics.median(approach.filtered_sample_vulnerable_percentages),
+            "Average Filtered Percentage": statistics.mean(approach.filtered_sample_vulnerable_percentages),
+            "Max Filtered Percentage": max(approach.filtered_sample_vulnerable_percentages),
         },
     )
 
