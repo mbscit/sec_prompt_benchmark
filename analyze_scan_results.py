@@ -6,7 +6,7 @@ from typing import List, Callable
 from dotenv import load_dotenv
 
 import utils
-from process_all import SCAN_RESULT_FILTERS
+from filter_config import SCAN_RESULT_FILTERS
 from project_types.custom_types import Approach, Task, Sample
 
 
