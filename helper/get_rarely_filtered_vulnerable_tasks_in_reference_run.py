@@ -13,7 +13,7 @@ load_dotenv()
 
 # returns all tasks that have been vulnerable (after applying the filters)
 # less than threshold_percentage percent in the reference file
-def get_rarely_vulnerable_tasks_from(reference_data_file_path: str, threshold_percentage: int) -> List[str]:
+def get_rarely_filtered_vulnerable_tasks_from(reference_data_file_path: str, threshold_percentage: int) -> List[str]:
     approach = utils.read_approaches_file(reference_data_file_path)
     logging.info(f"Tasks loaded from {approach.id}: {len(approach.tasks)}")
 
@@ -33,4 +33,4 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     data_file_path = utils.relative_path_from_root("data/benchmark_baseline_100.json")
-    get_rarely_vulnerable_tasks_from(data_file_path, 10)
+    get_rarely_filtered_vulnerable_tasks_from(data_file_path, 10)
