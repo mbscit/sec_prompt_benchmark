@@ -30,6 +30,7 @@ def get_rarely_filtered_vulnerable_tasks_from(reference_data_file_path: str, thr
 
 
 if __name__ == "__main__":
+    load_dotenv()
     logging.basicConfig(level=logging.INFO)
 
     data_file_path = utils.relative_path_from_root("data/benchmark_baseline_100.json")

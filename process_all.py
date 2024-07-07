@@ -26,6 +26,7 @@ def process_all(data_folder_path: str):
 if __name__ == "__main__":
     st = time.time()
 
+    load_dotenv()
     data_folder_path = os.path.dirname(utils.relative_path_from_root(os.getenv("DATA_FILE_PATH")))
 
     process_all(data_folder_path)
