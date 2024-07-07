@@ -134,6 +134,7 @@ def main():
 
 if __name__ == "__main__":
     st = time.time()
+    load_dotenv()
     main()
     et = time.time()
     print(f"Total execution time: {(et - st):.2f}s")
