@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import subprocess
 import uuid
 from typing import List
@@ -74,7 +75,7 @@ class Scanner:
         return file_name
 
     def scan_samples(self, approach: Approach, sample_index: int):
-        working_dir = relative_path_from_root('./tmp')
+        working_dir = relative_path_from_root('./tmp_code')
         os.makedirs(working_dir, exist_ok=True)
         subfolder = relative_path_from_root(os.path.join(working_dir, str(uuid.uuid4())))
         os.makedirs(subfolder)
@@ -124,6 +125,7 @@ class Scanner:
             print(f"Total Samples: {len(tasks)}")
             print(f"Successful Scans: {self.successful_scans}")
             print(f"Error Samples: {self.error_samples}")
+        shutil.rmtree(subfolder)
 
 
 if __name__ == "__main__":
