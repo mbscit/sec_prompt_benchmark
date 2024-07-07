@@ -4,6 +4,7 @@ import logging
 import os
 import subprocess
 import uuid
+import re
 from typing import List
 
 from dotenv import load_dotenv
@@ -42,6 +43,12 @@ class Scanner:
         normpath = os.path.normpath(file_path)
 
         file_specific_results = [result for result in semgrep_result['results'] if result['path'] == normpath]
+        for result in file_specific_results:
+            if isinstance(result['extra']['metadata']['cwe'], str):
+                result['extra']['metadata']['cwe'] = re.sub(r'CWE-0+', 'CWE-', result['extra']['metadata']['cwe'])
+            elif isinstance(result['extra']['metadata']['cwe'], list):
+                result['extra']['metadata']['cwe'] = [re.sub(r'CWE-0+', 'CWE-', cwe) for cwe in result['extra']['metadata']['cwe']]
+
         cwe_filtered_results = [
             result for result in file_specific_results
             if (isinstance(result['extra']['metadata']['cwe'], str) and task.suspected_vulnerability in

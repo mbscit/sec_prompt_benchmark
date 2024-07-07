@@ -20,7 +20,7 @@ for file in os.listdir(data_folder_path):
     if os.path.isfile(data_file_path):
         approach = utils.read_approaches_file(data_file_path)
         for task in approach.tasks:
-            tasks[task.id] = set([task.suspected_vulnerability.replace("CWE-0", "CWE-")])
+            tasks[task.id] = task.suspected_vulnerability
             for sample in task.samples:
                 if sample.scanner_report:
                     for report in sample.scanner_report:

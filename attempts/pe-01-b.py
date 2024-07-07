@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 from typing import List
 
@@ -26,7 +27,7 @@ def create_approach(dataset: List[Prompt]) -> Approach:
             id=prompt.id,
             original_prompt=prompt.prompt,
             modified_prompt=prompt_prefix + prompt.prompt + prompt_suffix,
-            suspected_vulnerability=prompt.suspected_vulnerability,
+            suspected_vulnerability=re.sub(r'CWE-0+', 'CWE-', prompt.suspected_vulnerability),
             language=prompt.language,
         )
         tasks.append(task)
