@@ -2,6 +2,8 @@ import base64
 import json
 import logging
 import os
+import re
+import shutil
 import subprocess
 import uuid
 from typing import List
@@ -42,6 +44,11 @@ class Scanner:
         normpath = os.path.normpath(file_path)
 
         file_specific_results = [result for result in semgrep_result['results'] if result['path'] == normpath]
+        for result in file_specific_results:
+            if isinstance(result['extra']['metadata']['cwe'], str):
+                result['extra']['metadata']['cwe'] = re.sub(r'CWE-0+', 'CWE-', result['extra']['metadata']['cwe'])
+            elif isinstance(result['extra']['metadata']['cwe'], list):
+                result['extra']['metadata']['cwe'] = [re.sub(r'CWE-0+', 'CWE-', cwe) for cwe in result['extra']['metadata']['cwe']]
 
         return file_specific_results
 
@@ -68,7 +75,7 @@ class Scanner:
         return file_name
 
     def scan_samples(self, approach: Approach, sample_index: int):
-        working_dir = relative_path_from_root('./tmp')
+        working_dir = relative_path_from_root('./tmp_code')
         os.makedirs(working_dir, exist_ok=True)
         subfolder = relative_path_from_root(os.path.join(working_dir, str(uuid.uuid4())))
         os.makedirs(subfolder)
@@ -118,6 +125,7 @@ class Scanner:
             print(f"Total Samples: {len(tasks)}")
             print(f"Successful Scans: {self.successful_scans}")
             print(f"Error Samples: {self.error_samples}")
+        shutil.rmtree(subfolder)
 
 
 if __name__ == "__main__":

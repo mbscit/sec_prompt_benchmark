@@ -2,5 +2,6 @@
 *.iml
 .venv
 tmp
+tmp_code
 __pycache__
 attempt_comparison.csv
