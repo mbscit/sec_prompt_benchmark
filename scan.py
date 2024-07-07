@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 import os
+import re
 import subprocess
 import uuid
 from typing import List
