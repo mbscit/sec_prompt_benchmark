@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 import analyze_scan_results
 import utils
 from extract_code_from_generated_response import CodeExtractor
+from filter_config import SCAN_RESULT_FILTERS
 from generate_response_from_modified_prompts import ResponseGenerator
 from project_types.custom_types import Approach, Task, Sample
 from scan import Scanner
@@ -81,36 +82,51 @@ def process_file(data_file_path, scan_result_filters: List[Callable[[Task, Sampl
         scanner = Scanner()
         scanner.scan_samples(approach, i)
 
-        # if syntax errors were found by the scanner, regenerate and rescan the affected sample
-        # abort after 3 unsuccessful regenerations
+        # if syntax errors were found by the scanner, re-extract and re-scan the affected sample
+        # if the issue persists, re-generate the response and re-scan the affected sample
+        # abort after 4 unsuccessful regenerations
         scan_errors = [error for error in approach.errors["scan"] if error.sample_index == i]
-        syntax_errors = [error for error in scan_errors if error.error.startswith("Syntax error at")]
+        syntax_errors = [error for error in scan_errors if
+                         error.error.startswith("Syntax error at")
+                         or error.error.startswith("Lexical error at")]
         num_regenerations = 0
-        while syntax_errors and num_regenerations < 3:
-            logging.warning(
-                f"Syntax errors found in {len(syntax_errors)} samples, regenerating and rescanning affected samples")
+        while syntax_errors and num_regenerations < 4:
             num_regenerations += 1
+            re_generate = not num_regenerations & 1  # only re-generate on even tries, otherwise only re-extract
+            logging.info(
+                f"Syntax errors found in {len(syntax_errors)} samples, "
+                f"{'re-extracting' if re_generate else 're-generating'} "
+                f"and rescanning affected samples")
             error_tasks = [task for task in approach.tasks if
                            task.id in [error.task_id for error in syntax_errors]]
 
             for task in error_tasks:
-                sample = next(sample for sample in task.samples if sample.index == i)
-                sample.generated_response = None
+                samples_with_index = [sample for sample in task.samples if sample.index == i]
+                if len(samples_with_index) == 1:
+                    sample = samples_with_index[0]
+                else:
+                    raise ValueError(f"Task {task.id} has multiple samples with index {i}")
                 sample.extracted_code = None
                 sample.scanner_report = None
                 sample.filtered_scanner_report = None
+                if re_generate:
+                    sample.generated_response = None
 
             # re-initialize workers to reset statistics
             response_generator = ResponseGenerator()
             code_extractor = CodeExtractor()
             scanner = Scanner()
 
-            # re-generate and re-scan affected samples
-            retry_on_rate_limit(response_generator.generate_missing, approach, i)
-            retry_on_rate_limit(code_extractor.extract_missing, approach, i)
+            if re_generate:
+                retry_on_rate_limit(response_generator.generate_missing, approach, i)
+
+            # (re-)extract and re-scan affected samples
+            # if we didn't re-generate, we will use GPT to extract the code this time
+            retry_on_rate_limit(code_extractor.extract_missing, approach, i, not re_generate)
             scanner.scan_samples(approach, i)
             scan_errors = [error for error in approach.errors["scan"] if error.sample_index == i]
-            syntax_errors = [error for error in scan_errors if error.error.startswith("Syntax error at")]
+            syntax_errors = [error for error in scan_errors if
+                             error.error.startswith("Syntax error at") or error.error.startswith("Lexical error at")]
 
         if syntax_errors:
             logging.error(f"""Failed to resolve syntax errors in {len(syntax_errors)} samples after 3 attempts. 
@@ -129,7 +145,7 @@ def process_file(data_file_path, scan_result_filters: List[Callable[[Task, Sampl
 def main():
     load_dotenv()
     data_file_path = utils.relative_path_from_root(os.getenv('DATA_FILE_PATH'))
-    process_file(data_file_path)
+    process_file(data_file_path, SCAN_RESULT_FILTERS)
 
 
 if __name__ == "__main__":
