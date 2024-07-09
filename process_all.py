@@ -1,6 +1,5 @@
 import os
 import time
-from typing import List, Callable
 
 from dotenv import load_dotenv
 

@@ -59,7 +59,7 @@ class Scanner:
 
         file_specific_errors = [error for error in semgrep_result['errors'] if error['path'] == normpath]
         for file_specific_error in file_specific_errors:
-            logging.error(
+            logging.info(
                 f"Semgrep error for Task {task.id}, sample {sample_index}: \n {file_specific_error['message']}")
             self.errors.append(
                 SampleError(task_id=task.id, sample_index=sample_index, error=file_specific_error['message']))

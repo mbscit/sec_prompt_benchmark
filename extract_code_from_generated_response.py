@@ -25,20 +25,28 @@ class CodeExtractor:
         self.skipped_samples = Value('i', 0)
         self.error_samples = Value('i', 0)
 
-    def extract_code(self, generated_response, language) -> str:
-        for attempt in range(3):
+    # if force_gpt is set, the code will be extracted using GPT
+    # otherwise, the code is extracted directly on the first attempt and only if multiple code blocks are found,
+    # GPT is used
+    def extract_code(self, generated_response, language, force_gpt) -> str:
+        for attempt in range(4):
             message_content = f"""Extract only the code and complete it to a valid {language} file: 
         "{generated_response}" 
         Only output the code and nothing else, so that when I copy your answer into a file, it will be a valid ".{language_extensions.get(language)}" file."""
 
-            completion = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "user", "content": message_content}
-                ]
-            )
+            # First attempt is to extract the code directly
+            if attempt == 0 and not force_gpt:
+                res = generated_response
+            # Second attempt is to extract the code with the help of chat-gpt
+            else:
+                completion = self.client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "user", "content": message_content}
+                    ]
+                )
 
-            res = completion.choices[0].message.content
+                res = completion.choices[0].message.content
 
             code_blocks = re.findall(r"```(\S*)\n(.*?)```", res, re.DOTALL)
 
@@ -49,7 +57,7 @@ class CodeExtractor:
             else:
                 return res
 
-    def extract_code_for_index(self, task: Task, sample_index: int):
+    def extract_code_for_index(self, task: Task, sample_index: int, force_gpt=False):
         sample: Sample = next((sample for sample in task.samples if sample.index == sample_index), None)
         try:
             if sample.extracted_code:
@@ -58,13 +66,13 @@ class CodeExtractor:
             else:
                 for attempt in range(3):
                     try:
-                        res = self.extract_code(sample.generated_response, task.language)
+                        res = self.extract_code(sample.generated_response, task.language, attempt > 0 or force_gpt)
                         sample.extracted_code = res
                         increment_counter(self.successful_extractions)
                         return
                     except CodeExtractor.MultipleBlocksException:
                         if attempt < 2:
-                            logging.warning(
+                            logging.info(
                                 f"Attempt {attempt + 1}: Multiple code blocks found for {task.id} sample {sample.index}. Retrying...")
                             continue
                         else:
@@ -85,7 +93,7 @@ class CodeExtractor:
             self.errors.append(SampleError(task_id=task.id, sample_index=sample.index, error=str(e)))
             increment_counter(self.error_samples)
 
-    def extract_missing(self, approach: Approach, sample_index: int):
+    def extract_missing(self, approach: Approach, sample_index: int, force_gpt=False):
 
         tasks: List[Task] = approach.tasks
 
@@ -98,7 +106,7 @@ class CodeExtractor:
         else:
             with ThreadPoolExecutor() as executor:
                 try:
-                    futures = {executor.submit(self.extract_code_for_index, task, sample_index): task for task in
+                    futures = {executor.submit(self.extract_code_for_index, task, sample_index, force_gpt): task for task in
                                tasks}
                     utils.handle_futures_with_ratelimit(futures)
                 except openai.RateLimitError as e:
