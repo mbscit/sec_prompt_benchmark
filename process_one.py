@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 import analyze_scan_results
 import utils
 from extract_code_from_generated_response import CodeExtractor
+from filter_config import SCAN_RESULT_FILTERS
 from generate_response_from_modified_prompts import ResponseGenerator
 from project_types.custom_types import Approach, Task, Sample
 from scan import Scanner
@@ -129,7 +130,7 @@ def process_file(data_file_path, scan_result_filters: List[Callable[[Task, Sampl
 def main():
     load_dotenv()
     data_file_path = utils.relative_path_from_root(os.getenv('DATA_FILE_PATH'))
-    process_file(data_file_path)
+    process_file(data_file_path, SCAN_RESULT_FILTERS)
 
 
 if __name__ == "__main__":
