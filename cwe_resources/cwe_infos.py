@@ -7,6 +7,31 @@ sys.path.append("../sec_prompt_benchmark")
 
 import utils
 
+# Global variables to cache data
+cwe_hierarchy_data = None
+cwe_mapping_suggestions_data = None
+cwe_mapping_usage_data = None
+
+
+def load_data():
+    global cwe_hierarchy_data, cwe_mapping_suggestions_data, cwe_mapping_usage_data
+    cwe_hierarchy_file_path = utils.relative_path_from_root('cwe_resources/structures/cwe_hierarchy.json')
+    with open(cwe_hierarchy_file_path, 'r') as file:
+        cwe_hierarchy_data = json.load(file)
+
+    cwe_mapping_suggestions_file_path = utils.relative_path_from_root(
+        'cwe_resources/structures/cwe_mapping_suggestions.json')
+    with open(cwe_mapping_suggestions_file_path, 'r') as file:
+        cwe_mapping_suggestions_data = json.load(file)
+
+    cwe_mapping_usage_file_path = utils.relative_path_from_root(
+        'cwe_resources/structures/cwe_mapping_usage.json')
+    with open(cwe_mapping_usage_file_path, 'r') as file:
+        cwe_mapping_usage_data = json.load(file)
+
+
+load_data()
+
 
 def find_cwe(data, id, parents=None):
     if parents is None:
@@ -30,9 +55,7 @@ def get_descendants(node):
 
 def get_related(id):
     id = id.replace("CWE-", "")
-    cwe_hierarchy_file_path = utils.relative_path_from_root('cwe_resources/structures/cwe_hierarchy.json')
-    with open(cwe_hierarchy_file_path, 'r') as file:
-        data = json.load(file)
+    data = cwe_hierarchy_data
 
     node, parents = find_cwe(data, id)
     if not node:
@@ -61,10 +84,7 @@ def get_related(id):
 
 def get_suggested_mappings(id):
     id = id.replace("CWE-", "")
-    cwe_mapping_suggestions_file_path = utils.relative_path_from_root(
-        'cwe_resources/structures/cwe_mapping_suggestions.json')
-    with open(cwe_mapping_suggestions_file_path, 'r') as file:
-        data = json.load(file)
+    data = cwe_mapping_suggestions_data
 
     try:
         return data[id]
@@ -74,10 +94,7 @@ def get_suggested_mappings(id):
 
 def get_mapping_level(id):
     id = id.replace("CWE-", "")
-    cwe_mapping_suggestions_file_path = utils.relative_path_from_root(
-        'cwe_resources/structures/cwe_mapping_usage.json')
-    with open(cwe_mapping_suggestions_file_path, 'r') as file:
-        data = json.load(file)
+    data = cwe_mapping_usage_data
 
     # TODO: fix in dataset
     if id == "730":
