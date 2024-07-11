@@ -10,7 +10,7 @@ import cwe_utils
 
 
 def build_usage_dict():
-    root, namespaces = cwe_utils.read_cwe_1000()
+    root, namespaces = cwe_utils.read_cwe_xml()
     usage_dict = defaultdict(list)
     weaknesses = root.findall(".//ns:Weakness", namespaces)
 
@@ -25,7 +25,7 @@ def build_usage_dict():
 
 
 def create_mapping_usage_structure():
-    usages_file_path = utils.relative_path_from_root('cwe_resources/structures/cwe_mapping_usage.json')
+    usages_file_path = utils.relative_path_from_root('cwe_resources/structures/json/cwe_mapping_usage.json')
 
     usages_dict = build_usage_dict()
 

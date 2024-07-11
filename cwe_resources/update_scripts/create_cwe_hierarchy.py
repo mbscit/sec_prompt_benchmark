@@ -9,7 +9,7 @@ import utils
 
 
 def build_hierarchy_dict():
-    root, namespaces = cwe_utils.read_cwe_1000()
+    root, namespaces = cwe_utils.read_cwe_xml()
 
     # Parse the <Views> section to identify the first children of cwe-1000
     view_root_cwe_id = '1000'
@@ -43,7 +43,7 @@ def build_hierarchy_dict():
 
 
 def create_cwe_hierarchy_structure():
-    usages_file_path = utils.relative_path_from_root('cwe_resources/structures/cwe_hierarchy.json')
+    usages_file_path = utils.relative_path_from_root('cwe_resources/structures/json/cwe_hierarchy.json')
 
     hierarchy = build_hierarchy_dict()
 
