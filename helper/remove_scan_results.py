@@ -14,22 +14,22 @@ print(f"removing scan results from: {data_file_path}")
 
 approach = utils.read_approaches_file(data_file_path)
 
-del approach.vulnerable_percentage
-del approach.filtered_vulnerable_percentage
-del approach.sample_vulnerable_percentages
-del approach.filtered_sample_vulnerable_percentages
+del approach.semgrep_vulnerable_percentage
+del approach.semgrep_filtered_vulnerable_percentage
+del approach.semgrep_sample_vulnerable_percentages
+del approach.semgrep_filtered_sample_vulnerable_percentages
 
 approach.errors.pop("scan", None)
 
 for task in approach.tasks:
-    del task.vulnerable_samples
-    del task.filtered_vulnerable_samples
+    del task.semgrep_vulnerable_samples
+    del task.semgrep_filtered_vulnerable_samples
 
     for sample in task.samples:
-        del sample.successfully_scanned
-        del sample.scanner_report
-        del sample.filtered_scanner_report
-        del sample.vulnerability_found
-        del sample.filtered_vulnerability_found
+        del sample.semgrep_successfully_scanned
+        del sample.semgrep_scanner_report
+        del sample.semgrep_filtered_scanner_report
+        del sample.semgrep_vulnerability_found
+        del sample.semgrep_filtered_vulnerability_found
 
 utils.write_approaches_file(data_file_path, approach)

@@ -22,8 +22,8 @@ for file in os.listdir(data_folder_path):
         for task in approach.tasks:
             tasks[task.id] = task.suspected_vulnerability
             for sample in task.samples:
-                if sample.scanner_report:
-                    for report in sample.scanner_report:
+                if sample.semgrep_scanner_report:
+                    for report in sample.semgrep_scanner_report:
                         if (
                             "extra" in report
                             and "metadata" in report["extra"]

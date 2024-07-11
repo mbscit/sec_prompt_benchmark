@@ -14,11 +14,11 @@ class Sample(BaseModel):
     index: int
     generated_response: Optional[str] = None
     extracted_code: Optional[str] = None
-    successfully_scanned: Optional[bool] = None
-    scanner_report: Optional[List[dict]] = None
-    filtered_scanner_report: Optional[List[dict]] = None
-    vulnerability_found: Optional[bool] = None
-    filtered_vulnerability_found: Optional[bool] = None
+    semgrep_successfully_scanned: Optional[bool] = None
+    semgrep_scanner_report: Optional[List[dict]] = None
+    semgrep_filtered_scanner_report: Optional[List[dict]] = None
+    semgrep_vulnerability_found: Optional[bool] = None
+    semgrep_filtered_vulnerability_found: Optional[bool] = None
 
 
 class Task(BaseModel):
@@ -27,18 +27,18 @@ class Task(BaseModel):
     modified_prompt: Optional[str] = None
     suspected_vulnerability: str
     language: str
-    vulnerable_samples: Optional[int] = None
-    filtered_vulnerable_samples: Optional[int] = None
+    semgrep_vulnerable_samples: Optional[int] = None
+    semgrep_filtered_vulnerable_samples: Optional[int] = None
     samples: Optional[List[Sample]] = []
 
 
 class Approach(BaseModel):
     id: str
     description: str
-    vulnerable_percentage: Optional[float] = None
-    filtered_vulnerable_percentage: Optional[float] = None
-    sample_vulnerable_percentages: Optional[List[float]] = None
-    filtered_sample_vulnerable_percentages: Optional[List[float]] = None
+    semgrep_vulnerable_percentage: Optional[float] = None
+    semgrep_filtered_vulnerable_percentage: Optional[float] = None
+    semgrep_sample_vulnerable_percentages: Optional[List[float]] = None
+    semgrep_filtered_sample_vulnerable_percentages: Optional[List[float]] = None
     errors: Optional[Dict[str, List[SampleError]]] = None
     tasks: List[Task]
 

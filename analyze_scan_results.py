@@ -16,34 +16,34 @@ def analyze(approach: Approach, scan_result_filters: List[Callable[[Task, Sample
     tasks: List[Task] = approach.tasks
 
     utils.validate_task_integrity(tasks, ["id", "samples"])
-    utils.validate_sample_integrity(tasks, ["successfully_scanned"])
+    utils.validate_sample_integrity(tasks, ["semgrep_successfully_scanned"])
 
     for task in tasks:
         # set bool vulnerability_found and filtered_vulnerability_found for each sample
         # and store filtered reports in sample.filtered_scanner_report
         for sample in task.samples:
-            filtered_reports = copy.deepcopy(sample.scanner_report)
+            filtered_reports = copy.deepcopy(sample.semgrep_scanner_report)
             if scan_result_filters is not None:
                 for scan_result_filter in scan_result_filters:
                     filtered_reports = [result for result in filtered_reports if
                                         scan_result_filter(task, sample, result)]
 
-            sample.filtered_scanner_report = filtered_reports
+            sample.semgrep_filtered_scanner_report = filtered_reports
 
-            sample.vulnerability_found = len(sample.scanner_report) > 0
-            sample.filtered_vulnerability_found = len(filtered_reports) > 0
+            sample.semgrep_vulnerability_found = len(sample.semgrep_scanner_report) > 0
+            sample.semgrep_filtered_vulnerability_found = len(filtered_reports) > 0
         # count vulnerable_samples and filtered_vulnerable_samples for each task
-        task.vulnerable_samples = len([sample for sample in task.samples if sample.vulnerability_found])
-        task.filtered_vulnerable_samples = len(
-            [sample for sample in task.samples if sample.filtered_vulnerability_found])
+        task.semgrep_vulnerable_samples = len([sample for sample in task.samples if sample.semgrep_vulnerability_found])
+        task.semgrep_filtered_vulnerable_samples = len(
+            [sample for sample in task.samples if sample.semgrep_filtered_vulnerability_found])
 
     total_samples = sum(len(task.samples) for task in tasks)
-    total_vulnerable_samples = sum(task.vulnerable_samples for task in tasks)
-    total_filtered_vulnerable_samples = sum(task.filtered_vulnerable_samples for task in tasks)
+    total_vulnerable_samples = sum(task.semgrep_vulnerable_samples for task in tasks)
+    total_filtered_vulnerable_samples = sum(task.semgrep_filtered_vulnerable_samples for task in tasks)
 
-    approach.vulnerable_percentage = (
+    approach.semgrep_vulnerable_percentage = (
                                              total_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
-    approach.filtered_vulnerable_percentage = (
+    approach.semgrep_filtered_vulnerable_percentage = (
                                                       total_filtered_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
 
     sample_vulnerable_percentages = []
@@ -53,8 +53,8 @@ def analyze(approach: Approach, scan_result_filters: List[Callable[[Task, Sample
     # since validate_sample_integrity checks it
     for i in range(len(tasks[0].samples)):
         # check sample at index i for every task and save result in sample_*_percentages array
-        vulnerable_samples_at_index = [task.samples[i].vulnerability_found for task in tasks]
-        filtered_vulnerable_samples_at_index = [task.samples[i].filtered_vulnerability_found for task in tasks]
+        vulnerable_samples_at_index = [task.samples[i].semgrep_vulnerability_found for task in tasks]
+        filtered_vulnerable_samples_at_index = [task.samples[i].semgrep_filtered_vulnerability_found for task in tasks]
         vulnerable_percentage = (sum(vulnerable_samples_at_index) / len(
             vulnerable_samples_at_index)) * 100 if vulnerable_samples_at_index else 0
         filtered_vulnerable_percentage = (sum(filtered_vulnerable_samples_at_index) / len(
@@ -62,8 +62,8 @@ def analyze(approach: Approach, scan_result_filters: List[Callable[[Task, Sample
         sample_vulnerable_percentages.append(vulnerable_percentage)
         sample_filtered_vulnerable_percentages.append(filtered_vulnerable_percentage)
 
-    approach.sample_vulnerable_percentages = sample_vulnerable_percentages
-    approach.filtered_sample_vulnerable_percentages = sample_filtered_vulnerable_percentages
+    approach.semgrep_sample_vulnerable_percentages = sample_vulnerable_percentages
+    approach.semgrep_filtered_sample_vulnerable_percentages = sample_filtered_vulnerable_percentages
 
     print("Summary:")
 
@@ -71,8 +71,8 @@ def analyze(approach: Approach, scan_result_filters: List[Callable[[Task, Sample
 
     print(f"Total Tasks: {len(tasks)}")
     print(f"Total Samples: {total_samples}")
-    print(f"Vulnerable Samples: {approach.vulnerable_percentage:.1f}%")
-    print(f"Filtered Vulnerable CWE Samples: {approach.filtered_vulnerable_percentage:.1f}%")
+    print(f"Vulnerable Samples: {approach.semgrep_vulnerable_percentage:.1f}%")
+    print(f"Filtered Vulnerable CWE Samples: {approach.semgrep_filtered_vulnerable_percentage:.1f}%")
 
     print()
 

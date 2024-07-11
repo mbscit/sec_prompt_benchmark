@@ -15,7 +15,7 @@ from project_types.custom_types import Approach, Task, language_extensions, Samp
 from utils import relative_path_from_root
 
 
-class Scanner:
+class SemgrepScanner:
 
     def __init__(self):
         self.errors: List[SampleError] = []
@@ -71,7 +71,7 @@ class Scanner:
         file_extension = language_extensions.get(task.language)
         if not file_extension:
             raise ValueError(f"Unsupported language {task.language}")
-        file_name = f"{Scanner.encode_name(task.id)}.{file_extension}"
+        file_name = f"{SemgrepScanner.encode_name(task.id)}.{file_extension}"
         return file_name
 
     def scan_samples(self, approach: Approach, sample_index: int):
@@ -85,7 +85,7 @@ class Scanner:
         utils.validate_task_integrity(tasks, ["id", "suspected_vulnerability"])
         utils.validate_sample_integrity(tasks, ["extracted_code"], sample_index + 1)
 
-        if all(sample.successfully_scanned for task in tasks for sample in task.samples if
+        if all(sample.semgrep_successfully_scanned for task in tasks for sample in task.samples if
                sample.index == sample_index):
             print(f"Sample {sample_index} has already been scanned for all tasks")
         else:
@@ -103,10 +103,10 @@ class Scanner:
                     try:
                         sample: Sample = next((sample for sample in task.samples if sample.index == sample_index), None)
                         file_specific_errors = self.extract_scan_errors(json_output, task, sample_index, subfolder)
-                        sample.scanner_report = self.extract_scan_results(json_output, task, subfolder)
+                        sample.semgrep_scanner_report = self.extract_scan_results(json_output, task, subfolder)
 
                         if not file_specific_errors:
-                            sample.successfully_scanned = True
+                            sample.semgrep_successfully_scanned = True
                             self.successful_scans += 1
                         else:
                             self.error_samples += 1
@@ -135,7 +135,7 @@ if __name__ == "__main__":
 
     approach = utils.read_approaches_file(data_file_path)
 
-    scanner = Scanner()
+    scanner = SemgrepScanner()
 
     try:
         scanner.scan_samples(approach, sample_index)

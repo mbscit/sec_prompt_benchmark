@@ -13,7 +13,7 @@ from extract_code_from_generated_response import CodeExtractor
 from filter_config import SCAN_RESULT_FILTERS
 from generate_response_from_modified_prompts import ResponseGenerator
 from project_types.custom_types import Approach, Task, Sample
-from scan import Scanner
+from semgrep_scan import SemgrepScanner
 
 
 def retry_on_rate_limit(func, *args, **kwargs):
@@ -79,7 +79,7 @@ def process_file(data_file_path, scan_result_filters: List[Callable[[Task, Sampl
 
         print(f"Starting scan for sample {i}")
         st = time.time()
-        scanner = Scanner()
+        scanner = SemgrepScanner()
         scanner.scan_samples(approach, i)
 
         # if syntax errors were found by the scanner, re-extract and re-scan the affected sample
@@ -107,15 +107,15 @@ def process_file(data_file_path, scan_result_filters: List[Callable[[Task, Sampl
                 else:
                     raise ValueError(f"Task {task.id} has multiple samples with index {i}")
                 sample.extracted_code = None
-                sample.scanner_report = None
-                sample.filtered_scanner_report = None
+                sample.semgrep_scanner_report = None
+                sample.semgrep_filtered_scanner_report = None
                 if re_generate:
                     sample.generated_response = None
 
             # re-initialize workers to reset statistics
             response_generator = ResponseGenerator()
             code_extractor = CodeExtractor()
-            scanner = Scanner()
+            scanner = SemgrepScanner()
 
             if re_generate:
                 retry_on_rate_limit(response_generator.generate_missing, approach, i)

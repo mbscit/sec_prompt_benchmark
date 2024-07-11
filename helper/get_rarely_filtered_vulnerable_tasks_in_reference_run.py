@@ -19,7 +19,7 @@ def get_rarely_filtered_vulnerable_tasks_from(reference_data_file_path: str, thr
 
     rarely_vulnerable_tasks: List[str] = []
     for task in approach.tasks:
-        if task.filtered_vulnerable_samples < len(task.samples) * threshold_percentage / 100:
+        if task.semgrep_filtered_vulnerable_samples < len(task.samples) * threshold_percentage / 100:
             rarely_vulnerable_tasks.append(task.id)
 
     logging.info(

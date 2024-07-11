@@ -51,21 +51,21 @@ class CodeQLScanner:
 
         return file_specific_results
 
-    def extract_scan_errors(self, semgrep_result, task: Task, sample_index: int, folder: str):
+    def extract_scan_errors(self, codeql_result, task: Task, sample_index: int, folder: str):
         # TODO: implement
         file_specific_errors = []
 
         # file_name = self.get_file_name(task)
         #
-        # file_specific_errors = [result for result in semgrep_result["runs"][0]["results"] if
+        # file_specific_errors = [result for result in codeql_result["runs"][0]["results"] if
         #                         any(location for location in result["locations"] if file_name == location["physicalLocation"]["artifactLocation"]["uri"])]
         # for file_specific_error in file_specific_errors:
-        #     rule = semgrep_result["rules"].get(file_specific_error["ruleId"])
+        #     rule = codeql_result["rules"].get(file_specific_error["ruleId"])
         #
         #     file_specific_error["rule"] = rule
         #
         #     logging.info(
-        #         f"Semgrep error for Task {task.id}, sample {sample_index}: \n {file_specific_error['message']}")
+        #         f"codeql error for Task {task.id}, sample {sample_index}: \n {file_specific_error['message']}")
         #     self.errors.append(
         #         SampleError(task_id=task.id, sample_index=sample_index, error=file_specific_error['message']))
 
@@ -90,7 +90,7 @@ class CodeQLScanner:
         utils.validate_task_integrity(tasks, ["id", "suspected_vulnerability"])
         utils.validate_sample_integrity(tasks, ["extracted_code"], sample_index + 1)
 
-        if all(sample.successfully_scanned for task in tasks for sample in task.samples if
+        if all(sample.codeql_successfully_scanned for task in tasks for sample in task.samples if
                sample.index == sample_index):
             print(f"Sample {sample_index} has already been scanned for all tasks")
         else:
@@ -131,10 +131,10 @@ class CodeQLScanner:
                             sample: Sample = next((sample for sample in task.samples if sample.index == sample_index),
                                                   None)
                             file_specific_errors = self.extract_scan_errors(json_output, task, sample_index, subfolder)
-                            sample.scanner_report = self.extract_scan_results(json_output, task, subfolder)
+                            sample.codeql_scanner_report = self.extract_scan_results(json_output, task, subfolder)
 
                             if not file_specific_errors:
-                                sample.successfully_scanned = True
+                                sample.codeql_successfully_scanned = True
                                 self.successful_scans += 1
                             else:
                                 self.error_samples += 1
