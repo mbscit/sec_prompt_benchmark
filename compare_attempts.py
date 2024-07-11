@@ -21,8 +21,8 @@ def compare(data_folder_path: str):
             logging.info(f"Analyzing: {data_file_path}")
             approach = utils.read_approaches_file(data_file_path)
             if (
-                not approach.vulnerable_percentage is None
-                and not approach.filtered_vulnerable_percentage is None
+                not approach.semgrep_vulnerable_percentage is None
+                and not approach.semgrep_filtered_vulnerable_percentage is None
             ):
                 results = {"Filename": file}
                 matrix.append(results)
@@ -58,23 +58,23 @@ def analyze(approach: Approach, results):
     tasks: List[Task] = approach.tasks
 
     utils.validate_task_integrity(tasks, ["id", "samples"])
-    utils.validate_sample_integrity(tasks, ["successfully_scanned"])
+    utils.validate_sample_integrity(tasks, ["semgrep_successfully_scanned"])
 
     results.update(
         {
             "ID": approach.id,
             "Total Tasks": len(tasks),
             "Total Samples": sum( len(task.samples) for task in tasks),
-            "Vulnerable Samples": approach.vulnerable_percentage,
-            "Filtered Vulnerable Samples": approach.filtered_vulnerable_percentage,
-            "Min Vulnerable Percentage": min(approach.sample_vulnerable_percentages),
-            "Median Vulnerable Percentage": statistics.median(approach.sample_vulnerable_percentages),
-            "Average Vulnerable Percentage": statistics.mean(approach.sample_vulnerable_percentages),
-            "Max Vulnerable Percentage": max(approach.sample_vulnerable_percentages),
-            "Min Filtered Percentage": min(approach.filtered_sample_vulnerable_percentages),
-            "Median Filtered Percentage": statistics.median(approach.filtered_sample_vulnerable_percentages),
-            "Average Filtered Percentage": statistics.mean(approach.filtered_sample_vulnerable_percentages),
-            "Max Filtered Percentage": max(approach.filtered_sample_vulnerable_percentages),
+            "Vulnerable Samples": approach.semgrep_vulnerable_percentage,
+            "Filtered Vulnerable Samples": approach.semgrep_filtered_vulnerable_percentage,
+            "Min Vulnerable Percentage": min(approach.semgrep_sample_vulnerable_percentages),
+            "Median Vulnerable Percentage": statistics.median(approach.semgrep_sample_vulnerable_percentages),
+            "Average Vulnerable Percentage": statistics.mean(approach.semgrep_sample_vulnerable_percentages),
+            "Max Vulnerable Percentage": max(approach.semgrep_sample_vulnerable_percentages),
+            "Min Filtered Percentage": min(approach.semgrep_filtered_sample_vulnerable_percentages),
+            "Median Filtered Percentage": statistics.median(approach.semgrep_filtered_sample_vulnerable_percentages),
+            "Average Filtered Percentage": statistics.mean(approach.semgrep_filtered_sample_vulnerable_percentages),
+            "Max Filtered Percentage": max(approach.semgrep_filtered_sample_vulnerable_percentages),
         },
     )
 

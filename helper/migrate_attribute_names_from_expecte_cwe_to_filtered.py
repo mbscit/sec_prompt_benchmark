@@ -35,8 +35,8 @@ for file in os.listdir(data_folder_path):
         if isinstance(data, dict):
             # Rename attributes in the root
             data = rename_keys_preserve_order(data, {
-                "expected_cwe_percentage": "filtered_vulnerable_percentage",
-                "sample_expected_cwe_percentages": "filtered_sample_vulnerable_percentages"
+                "expected_cwe_percentage": "semgrep_filtered_vulnerable_percentage",
+                "sample_expected_cwe_percentages": "semgrep_filtered_sample_vulnerable_percentages"
             })
 
             # Rename attributes in tasks

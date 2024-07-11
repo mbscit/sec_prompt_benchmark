@@ -11,6 +11,7 @@ import utils
 from compare_attempts import compare
 from filter_config import SCAN_RESULT_FILTERS
 from helper.get_rarely_filtered_vulnerable_tasks_in_reference_run import get_rarely_filtered_vulnerable_tasks_from
+from helper.get_rarely_vulnerable_tasks_in_reference_run import get_rarely_vulnerable_tasks_from
 from process_all import process_all
 
 
@@ -60,7 +61,7 @@ if __name__ == "__main__":
     reference_file_path = utils.relative_path_from_root("data/benchmark_baseline_100.json")
 
     tasks_to_ignore: List[str] = []
-    tasks_to_ignore.extend(get_rarely_filtered_vulnerable_tasks_from(reference_file_path, 10))
+    tasks_to_ignore.extend(get_rarely_filtered_vulnerable_tasks_from(reference_file_path, 15))
 
     process_filtered(data_folder_path, tasks_to_ignore)
 
