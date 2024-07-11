@@ -1,7 +1,7 @@
 import json
 import sys
 
-from cwe_resources.structures.cwe_usage import CWEMappingUsage
+from cwe_resources.structures.enum.usage import UsageEnumeration
 
 sys.path.append("../sec_prompt_benchmark")
 
@@ -15,17 +15,17 @@ cwe_mapping_usage_data = None
 
 def load_data():
     global cwe_hierarchy_data, cwe_mapping_suggestions_data, cwe_mapping_usage_data
-    cwe_hierarchy_file_path = utils.relative_path_from_root('cwe_resources/structures/cwe_hierarchy.json')
+    cwe_hierarchy_file_path = utils.relative_path_from_root('cwe_resources/structures/json/cwe_hierarchy.json')
     with open(cwe_hierarchy_file_path, 'r') as file:
         cwe_hierarchy_data = json.load(file)
 
     cwe_mapping_suggestions_file_path = utils.relative_path_from_root(
-        'cwe_resources/structures/cwe_mapping_suggestions.json')
+        'cwe_resources/structures/json/cwe_mapping_suggestions.json')
     with open(cwe_mapping_suggestions_file_path, 'r') as file:
         cwe_mapping_suggestions_data = json.load(file)
 
     cwe_mapping_usage_file_path = utils.relative_path_from_root(
-        'cwe_resources/structures/cwe_mapping_usage.json')
+        'cwe_resources/structures/json/cwe_mapping_usage.json')
     with open(cwe_mapping_usage_file_path, 'r') as file:
         cwe_mapping_usage_data = json.load(file)
 
@@ -96,8 +96,4 @@ def get_mapping_level(id):
     id = id.replace("CWE-", "")
     data = cwe_mapping_usage_data
 
-    # TODO: fix in dataset
-    if id == "730":
-        id = "400"
-
-    return CWEMappingUsage[data[id]]
+    return UsageEnumeration[data[id]]

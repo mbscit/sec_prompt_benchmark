@@ -10,7 +10,7 @@ import cwe_utils
 
 
 def build_suggestions_dict():
-    root, namespaces = cwe_utils.read_cwe_1000()
+    root, namespaces = cwe_utils.read_cwe_xml()
 
     suggestions_dict = defaultdict(list)
     weaknesses = root.findall(".//ns:Weakness", namespaces)
@@ -27,7 +27,7 @@ def build_suggestions_dict():
 
 
 def create_suggested_mappings_structure():
-    suggestions_file_path = utils.relative_path_from_root('cwe_resources/structures/cwe_mapping_suggestions.json')
+    suggestions_file_path = utils.relative_path_from_root('cwe_resources/structures/json/cwe_mapping_suggestions.json')
 
     suggestions_dict = build_suggestions_dict()
 

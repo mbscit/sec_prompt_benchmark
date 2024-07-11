@@ -57,7 +57,7 @@ def cwe_in_recommended_mapping(task: Task, sample: Sample, report: dict) -> bool
 
 
 def only_allow_cwes(report: dict, allowed_cwes):
-    found_cwes: get_detected_cwes(report)
+    found_cwes = get_detected_cwes(report)
     found_cwes = [found_cwe for found_cwe in found_cwes if
                   any(allowed_cwe in found_cwe for allowed_cwe in allowed_cwes)]
     return len(found_cwes) > 0
