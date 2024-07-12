@@ -19,6 +19,11 @@ class Sample(BaseModel):
     semgrep_filtered_scanner_report: Optional[List[dict]] = None
     semgrep_vulnerability_found: Optional[bool] = None
     semgrep_filtered_vulnerability_found: Optional[bool] = None
+    codeql_successfully_scanned: Optional[bool] = None
+    codeql_scanner_report: Optional[List[dict]] = None
+    codeql_filtered_scanner_report: Optional[List[dict]] = None
+    codeql_vulnerability_found: Optional[bool] = None
+    codeql_filtered_vulnerability_found: Optional[bool] = None
 
 
 class Task(BaseModel):
@@ -29,6 +34,8 @@ class Task(BaseModel):
     language: str
     semgrep_vulnerable_samples: Optional[int] = None
     semgrep_filtered_vulnerable_samples: Optional[int] = None
+    codeql_vulnerable_samples: Optional[int] = None
+    codeql_filtered_vulnerable_samples: Optional[int] = None
     samples: Optional[List[Sample]] = []
 
 
@@ -39,6 +46,10 @@ class Approach(BaseModel):
     semgrep_filtered_vulnerable_percentage: Optional[float] = None
     semgrep_sample_vulnerable_percentages: Optional[List[float]] = None
     semgrep_filtered_sample_vulnerable_percentages: Optional[List[float]] = None
+    codeql_vulnerable_percentage: Optional[float] = None
+    codeql_filtered_vulnerable_percentage: Optional[float] = None
+    codeql_sample_vulnerable_percentages: Optional[List[float]] = None
+    codeql_filtered_sample_vulnerable_percentages: Optional[List[float]] = None
     errors: Optional[Dict[str, List[SampleError]]] = None
     tasks: List[Task]
 

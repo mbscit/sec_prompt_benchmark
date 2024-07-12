@@ -10,9 +10,10 @@ from dotenv import load_dotenv
 import analyze_scan_results
 import utils
 from extract_code_from_generated_response import CodeExtractor
-from filter_config import SCAN_RESULT_FILTERS
+from filter_config import SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS
 from generate_response_from_modified_prompts import ResponseGenerator
 from project_types.custom_types import Approach, Task, Sample
+from scan_codeql import CodeQLScanner
 from semgrep_scan import SemgrepScanner
 
 
@@ -43,7 +44,7 @@ def save_if_changed(file_path, approach, previous_approach_dict):
     return previous_approach_dict
 
 
-def process_file(data_file_path, scan_result_filters: List[Callable[[Task, Sample, dict], bool]] = None):
+def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sample, dict], bool]] = None,  codeql_result_filters: List[Callable[[Task, Sample, dict], bool]] = None):
     load_dotenv()
     samples_per_task = int(os.getenv('SAMPLES_PER_TASK'))
 
@@ -77,15 +78,18 @@ def process_file(data_file_path, scan_result_filters: List[Callable[[Task, Sampl
 
         print()
 
-        print(f"Starting scan for sample {i}")
+        print(f"Starting semgrep scan for sample {i}")
         st = time.time()
-        scanner = SemgrepScanner()
-        scanner.scan_samples(approach, i)
+        semgrep_scanner = SemgrepScanner()
+        semgrep_scanner.scan_samples(approach, i)
 
         # if syntax errors were found by the scanner, re-extract and re-scan the affected sample
         # if the issue persists, re-generate the response and re-scan the affected sample
         # abort after 4 unsuccessful regenerations
-        scan_errors = [error for error in approach.errors["scan"] if error.sample_index == i]
+        try:
+            scan_errors = [error for error in approach.errors["scan"] if error.sample_index == i]
+        except KeyError:
+            scan_errors = []
         syntax_errors = [error for error in scan_errors if
                          error.error.startswith("Syntax error at")
                          or error.error.startswith("Lexical error at")]
@@ -115,7 +119,7 @@ def process_file(data_file_path, scan_result_filters: List[Callable[[Task, Sampl
             # re-initialize workers to reset statistics
             response_generator = ResponseGenerator()
             code_extractor = CodeExtractor()
-            scanner = SemgrepScanner()
+            semgrep_scanner = SemgrepScanner()
 
             if re_generate:
                 retry_on_rate_limit(response_generator.generate_missing, approach, i)
@@ -123,7 +127,7 @@ def process_file(data_file_path, scan_result_filters: List[Callable[[Task, Sampl
             # (re-)extract and re-scan affected samples
             # if we didn't re-generate, we will use GPT to extract the code this time
             retry_on_rate_limit(code_extractor.extract_missing, approach, i, not re_generate)
-            scanner.scan_samples(approach, i)
+            semgrep_scanner.scan_samples(approach, i)
             scan_errors = [error for error in approach.errors["scan"] if error.sample_index == i]
             syntax_errors = [error for error in scan_errors if
                              error.error.startswith("Syntax error at") or error.error.startswith("Lexical error at")]
@@ -132,20 +136,33 @@ def process_file(data_file_path, scan_result_filters: List[Callable[[Task, Sampl
             logging.error(f"""Failed to resolve syntax errors in {len(syntax_errors)} samples after 3 attempts. 
             Check the error field in data file for more information.""")
 
+
         et = time.time()
         previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
-        print(f"Scan for sample {i} finished, time: {(et - st):.1f}s")
+        print(f"Semgrep scan for sample {i} finished, time: {(et - st):.1f}s")
 
         print()
 
-    analyze_scan_results.analyze(approach, scan_result_filters)
+        print(f"Starting codeql scan for sample {i}")
+        st = time.time()
+
+        codeql_scanner = CodeQLScanner()
+        codeql_scanner.scan_samples(approach, i)
+
+        et = time.time()
+
+        previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
+
+        print(f"Codeql scan for sample {i} finished, time: {(et - st):.1f}s")
+
+    analyze_scan_results.analyze(approach, semgrep_result_filters, codeql_result_filters)
     previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
 
 def main():
     load_dotenv()
     data_file_path = utils.relative_path_from_root(os.getenv('DATA_FILE_PATH'))
-    process_file(data_file_path, SCAN_RESULT_FILTERS)
+    process_file(data_file_path, SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
 
 
 if __name__ == "__main__":

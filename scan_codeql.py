@@ -110,7 +110,12 @@ class CodeQLScanner:
                 database_path = os.path.join(language_folder, "codeql-database")
                 results_path = os.path.join(language_folder, "codeql-results.json")
 
-                database_create_command = f"codeql database create --language={language} --source-root=\"{language_folder}\" {database_path}"
+                if language == "C" or language == "C++":
+                    makefile_path = utils.relative_path_from_root("helper/scan/Makefile")
+                    shutil.copy(makefile_path, language_folder)
+                    database_create_command = f"codeql database create --language=\"c-cpp\" --source-root=\"{language_folder}\" {database_path}"
+                else:
+                    database_create_command = f"codeql database create --language={language} --source-root=\"{language_folder}\" {database_path}"
                 create_result = subprocess.run(database_create_command, shell=True, capture_output=True, text=True)
                 logging.info(f"Codeql database create result for language {language}: {create_result.stdout}")
 
@@ -155,7 +160,7 @@ class CodeQLScanner:
             print(f"Total Samples: {len(tasks)}")
             print(f"Successful Scans: {self.successful_scans}")
             print(f"Error Samples: {self.error_samples}")
-        shutil.rmtree(subfolder)
+        # shutil.rmtree(subfolder)
 
 
 if __name__ == "__main__":

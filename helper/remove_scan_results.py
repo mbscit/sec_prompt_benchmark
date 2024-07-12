@@ -31,5 +31,11 @@ for task in approach.tasks:
         del sample.semgrep_filtered_scanner_report
         del sample.semgrep_vulnerability_found
         del sample.semgrep_filtered_vulnerability_found
+        
+        del sample.codeql_successfully_scanned
+        del sample.codeql_scanner_report
+        del sample.codeql_filtered_scanner_report
+        del sample.codeql_vulnerability_found
+        del sample.codeql_filtered_vulnerability_found
 
 utils.write_approaches_file(data_file_path, approach)
