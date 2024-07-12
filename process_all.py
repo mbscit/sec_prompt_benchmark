@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 import utils
 from compare_attempts import compare
-from filter_config import SCAN_RESULT_FILTERS
+from filter_config import SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS
 from process_one import process_file
 
 
@@ -19,7 +19,7 @@ def process_all(data_folder_path: str):
             print()
             print(f"processing file: {data_file_path}")
             print()
-            process_file(data_file_path, SCAN_RESULT_FILTERS)
+            process_file(data_file_path, SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
 
 
 if __name__ == "__main__":

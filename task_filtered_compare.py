@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 import analyze_scan_results
 import utils
 from compare_attempts import compare
-from filter_config import SCAN_RESULT_FILTERS
+from filter_config import SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS
 from helper.get_rarely_filtered_vulnerable_tasks_in_reference_run import get_rarely_filtered_vulnerable_tasks_from
 from helper.get_rarely_vulnerable_tasks_in_reference_run import get_rarely_vulnerable_tasks_from
 from process_all import process_all
@@ -37,7 +37,7 @@ def process_filtered(data_folder_path: str, tasks_to_ignore: List[str]):
             approach = utils.read_approaches_file(data_file_path)
             remaining_tasks = [task for task in approach.tasks if task.id not in tasks_to_ignore]
             approach.tasks = remaining_tasks
-            analyze_scan_results.analyze(approach, SCAN_RESULT_FILTERS)
+            analyze_scan_results.analyze(approach, SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
             utils.write_approaches_file(data_file_path, approach)
 
     print("Original compare result:")
