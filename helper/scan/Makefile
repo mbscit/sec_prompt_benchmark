@@ -1,46 +1,26 @@
-# Compiler
+# Define the compiler
 CC = gcc
 
-# Compiler flags
-CFLAGS = -Wall -Wextra -std=c11
+# Find all .c files in subdirectories
+SRC_FILES := $(shell find . -name '*.c')
 
-# Source files
-SRC = $(wildcard *.c)
+# Define the log file
+LOG_FILE = compile_errors.log
 
-# Object files
-OBJ = $(SRC:.c=.o)
+# Define the default target
+all: compile_all
 
-# Executable
-EXEC = my_program
+# Define the compilation rule
+compile_all:
+	@> $(LOG_FILE) # Clear the log file
+	@for src in $(SRC_FILES); do \
+		echo "Compiling $$src..."; \
+		$(CC) -o $$(dirname $$src)/$$(basename $$src .c).out $$src 2>> $(LOG_FILE) || true; \
+	done
 
-# Log file
-LOGFILE = build_log.txt
-JSONFILE = build_report.json
-
-# Default target
-all: clean $(EXEC) report
-
-# Build the executable
-$(EXEC): $(OBJ)
-	@echo "Linking object files to create the executable..."
-	-$(CC) $(CFLAGS) -o $@ $^ > $(LOGFILE) 2>&1 || true
-	@echo "Build completed with or without errors."
-
-# Build object files
-%.o: %.c
-	@echo "Compiling $<..."
-	-$(CC) $(CFLAGS) -c $< -o $@ >> $(LOGFILE) 2>&1 || true
-
-# Create a JSON report from the log file
-report:
-	@echo '{ "warnings":[' > $(JSONFILE)
-	@awk '/warning:/ { gsub(/"/, "\\\"", $$0); if (NR!=1) printf ","; printf "{\"file\":\"%s\",\"output\":\"%s\"}", FILENAME, $$0 }' $(LOGFILE) >> $(JSONFILE)
-	@echo '], "errors":[' >> $(JSONFILE)
-	@awk '/error:/ { gsub(/"/, "\\\"", $$0); if (NR!=1) printf ","; printf "{\"file\":\"%s\",\"output\":\"%s\"}", FILENAME, $$0 }' $(LOGFILE) >> $(JSONFILE)
-	@echo ']}' >> $(JSONFILE)
-
-# Clean up build files
+# Define a clean rule
 clean:
-	rm -f $(OBJ) $(EXEC) $(LOGFILE) $(JSONFILE)
+	find . -name '*.out' -exec rm -f {} \;
 
-.PHONY: all clean report
+# Always return exit code 0
+.PHONY: all compile_all clean

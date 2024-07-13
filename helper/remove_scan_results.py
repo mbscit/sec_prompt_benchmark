@@ -19,7 +19,8 @@ del approach.semgrep_filtered_vulnerable_percentage
 del approach.semgrep_sample_vulnerable_percentages
 del approach.semgrep_filtered_sample_vulnerable_percentages
 
-approach.errors.pop("scan", None)
+approach.errors.pop("semgrep_scan", None)
+approach.errors.pop("codeql_scan", None)
 
 for task in approach.tasks:
     del task.semgrep_vulnerable_samples

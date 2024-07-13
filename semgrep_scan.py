@@ -119,11 +119,11 @@ class SemgrepScanner:
             else:
                 raise Exception(f"Semgrep command failed. {result.stderr}")
 
-            approach.update_errors("scan", self.errors, sample_index)
+            approach.update_errors("semgrep_scan", self.errors, sample_index)
 
             print(f"Summary:")
             print(f"Total Samples: {len(tasks)}")
-            print(f"Successful Scans: {self.successful_scans}")
+            print(f"Successful Semgrep Scans: {self.successful_scans}")
             print(f"Error Samples: {self.error_samples}")
         shutil.rmtree(subfolder)
 

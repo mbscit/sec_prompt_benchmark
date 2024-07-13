@@ -13,8 +13,47 @@ from extract_code_from_generated_response import CodeExtractor
 from filter_config import SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS
 from generate_response_from_modified_prompts import ResponseGenerator
 from project_types.custom_types import Approach, Task, Sample
-from scan_codeql import CodeQLScanner
+from codeql_scan import CodeQLScanner
 from semgrep_scan import SemgrepScanner
+
+
+def re_scan_extract(relevant_scan_errors, num_regenerations, approach, i):
+    re_generate = not num_regenerations & 1  # only re-generate on even tries, otherwise only re-extract
+    logging.info(
+        f"Syntax errors found in {len(relevant_scan_errors)} samples at index {i}, "
+        f"{'re-extracting' if re_generate else 're-generating'} "
+        f"and rescanning affected samples")
+    error_tasks = [task for task in approach.tasks if
+                   task.id in [error.task_id for error in relevant_scan_errors]]
+
+    for task in error_tasks:
+        samples_with_index = [sample for sample in task.samples if sample.index == i]
+        if len(samples_with_index) == 1:
+            sample = samples_with_index[0]
+        else:
+            raise ValueError(f"Task {task.id} has multiple samples with index {i}")
+        sample.extracted_code = None
+        sample.semgrep_successfully_scanned = False
+        sample.semgrep_scanner_report = None
+        sample.semgrep_filtered_scanner_report = None
+
+        sample.codeql_successfully_scanned = False
+        sample.codeql_scanner_report = None
+        sample.codeql_filtered_scanner_report = None
+
+        if re_generate:
+            sample.generated_response = None
+
+    # re-initialize workers to reset statistics
+    response_generator = ResponseGenerator()
+    code_extractor = CodeExtractor()
+
+    if re_generate:
+        retry_on_rate_limit(response_generator.generate_missing, approach, i)
+
+    # (re-)extract and re-scan affected samples
+    # if we didn't re-generate, we will use GPT to extract the code this time
+    retry_on_rate_limit(code_extractor.extract_missing, approach, i, not re_generate)
 
 
 def retry_on_rate_limit(func, *args, **kwargs):
@@ -44,7 +83,8 @@ def save_if_changed(file_path, approach, previous_approach_dict):
     return previous_approach_dict
 
 
-def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sample, dict], bool]] = None,  codeql_result_filters: List[Callable[[Task, Sample, dict], bool]] = None):
+def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sample, dict], bool]] = None,
+                 codeql_result_filters: List[Callable[[Task, Sample, dict], bool]] = None):
     load_dotenv()
     samples_per_task = int(os.getenv('SAMPLES_PER_TASK'))
 
@@ -83,80 +123,79 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
         semgrep_scanner = SemgrepScanner()
         semgrep_scanner.scan_samples(approach, i)
 
-        # if syntax errors were found by the scanner, re-extract and re-scan the affected sample
-        # if the issue persists, re-generate the response and re-scan the affected sample
-        # abort after 4 unsuccessful regenerations
-        try:
-            scan_errors = [error for error in approach.errors["scan"] if error.sample_index == i]
-        except KeyError:
-            scan_errors = []
-        syntax_errors = [error for error in scan_errors if
-                         error.error.startswith("Syntax error at")
-                         or error.error.startswith("Lexical error at")]
-        num_regenerations = 0
-        while syntax_errors and num_regenerations < 4:
-            num_regenerations += 1
-            re_generate = not num_regenerations & 1  # only re-generate on even tries, otherwise only re-extract
-            logging.info(
-                f"Syntax errors found in {len(syntax_errors)} samples, "
-                f"{'re-extracting' if re_generate else 're-generating'} "
-                f"and rescanning affected samples")
-            error_tasks = [task for task in approach.tasks if
-                           task.id in [error.task_id for error in syntax_errors]]
-
-            for task in error_tasks:
-                samples_with_index = [sample for sample in task.samples if sample.index == i]
-                if len(samples_with_index) == 1:
-                    sample = samples_with_index[0]
-                else:
-                    raise ValueError(f"Task {task.id} has multiple samples with index {i}")
-                sample.extracted_code = None
-                sample.semgrep_scanner_report = None
-                sample.semgrep_filtered_scanner_report = None
-                if re_generate:
-                    sample.generated_response = None
-
-            # re-initialize workers to reset statistics
-            response_generator = ResponseGenerator()
-            code_extractor = CodeExtractor()
-            semgrep_scanner = SemgrepScanner()
-
-            if re_generate:
-                retry_on_rate_limit(response_generator.generate_missing, approach, i)
-
-            # (re-)extract and re-scan affected samples
-            # if we didn't re-generate, we will use GPT to extract the code this time
-            retry_on_rate_limit(code_extractor.extract_missing, approach, i, not re_generate)
-            semgrep_scanner.scan_samples(approach, i)
-            scan_errors = [error for error in approach.errors["scan"] if error.sample_index == i]
-            syntax_errors = [error for error in scan_errors if
-                             error.error.startswith("Syntax error at") or error.error.startswith("Lexical error at")]
-
-        if syntax_errors:
-            logging.error(f"""Failed to resolve syntax errors in {len(syntax_errors)} samples after 3 attempts. 
-            Check the error field in data file for more information.""")
-
-
         et = time.time()
         previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
         print(f"Semgrep scan for sample {i} finished, time: {(et - st):.1f}s")
 
         print()
 
-        print(f"Starting codeql scan for sample {i}")
-        st = time.time()
+    print(f"Starting codeql scan")
+    st = time.time()
 
-        codeql_scanner = CodeQLScanner()
-        codeql_scanner.scan_samples(approach, i)
+    codeql_scanner = CodeQLScanner()
+    codeql_scanner.scan_samples(approach)
 
-        et = time.time()
+    et = time.time()
 
-        previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
+    print(f"Semgrep scan finished, time: {(et - st):.1f}s")
 
-        print(f"Codeql scan for sample {i} finished, time: {(et - st):.1f}s")
+    # if errors were found by the scanner, re-extract and re-scan the affected sample
+    # if the issue persists, re-generate the response and re-scan the affected sample
+    # abort after 4 unsuccessful regenerations
+
+    relevant_scan_errors = get_relevant_scan_errors(approach)
+    if relevant_scan_errors:
+        num_regenerations = 0
+        while num_regenerations < 4:
+
+            num_regenerations += 1
+
+            for i in range(samples_per_task):
+
+                relevant_scan_errors = get_relevant_scan_errors(approach, i)
+                if relevant_scan_errors:
+                    logging.info(f"Syntax errors found in {len(relevant_scan_errors)} samples at index {i}, .")
+
+                    re_scan_extract(relevant_scan_errors, num_regenerations, approach, i)
+                    semgrep_scanner = SemgrepScanner()
+                    semgrep_scanner.scan_samples(approach, i)
+
+            codeql_scanner = CodeQLScanner()
+            codeql_scanner.scan_samples(approach)
+
+    relevant_scan_errors = get_relevant_scan_errors(approach)
+
+    if relevant_scan_errors:
+        logging.error(
+            f"""Failed to resolve syntax errors in {len(set([error.task_id + "-" + str(error.sample_index) for error in relevant_scan_errors]))} samples after 3 attempts.
+                Check the error field in data file for more information.""")
+
+    previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
     analyze_scan_results.analyze(approach, semgrep_result_filters, codeql_result_filters)
     previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
+
+
+def get_relevant_scan_errors(approach, i=-1):
+    try:
+        semgrep_scan_errors = [error for error in approach.errors["semgrep_scan"]]
+        if i > -1:
+            semgrep_scan_errors = [error for error in semgrep_scan_errors if error.sample_index == i]
+    except KeyError:
+        semgrep_scan_errors = []
+
+    relevant_scan_errors = [error for error in semgrep_scan_errors if
+                            error.error.startswith("Syntax error at")
+                            or error.error.startswith("Lexical error at")]
+    try:
+        codeql_scan_errors = [error for error in approach.errors["codeql_scan"]]
+        if i > -1:
+            codeql_scan_errors = [error for error in codeql_scan_errors if error.sample_index == i]
+    except KeyError:
+        codeql_scan_errors = []
+    relevant_scan_errors += [error for error in codeql_scan_errors if
+                             error.error.startswith("Extraction failed in")]
+    return relevant_scan_errors
 
 
 def main():
@@ -166,6 +205,7 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     st = time.time()
     load_dotenv()
     main()
