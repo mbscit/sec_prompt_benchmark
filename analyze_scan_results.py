@@ -44,6 +44,28 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
 
             sample.codeql_vulnerability_found = len(sample.codeql_scanner_report) > 0
             sample.codeql_filtered_vulnerability_found = len(codeql_filtered_reports) > 0
+
+            sample.scanners_agree_vulnerable = None
+            sample.scanners_agree_filtered_vulnerable = False
+            sample.scanners_agree_non_vulnerable = False
+            sample.scanners_agree_filtered_non_vulnerable = False
+            sample.scanners_disagree = False
+            sample.scanners_filtered_disagree = False
+
+            if sample.codeql_vulnerability_found and sample.semgrep_vulnerability_found:
+                sample.scanners_agree_vulnerable = True
+            elif not sample.codeql_vulnerability_found and not sample.semgrep_vulnerability_found:
+                sample.scanners_agree_non_vulnerable = True
+            else:
+                sample.scanners_disagree = True
+
+            if sample.codeql_filtered_vulnerability_found and sample.semgrep_filtered_vulnerability_found:
+                sample.scanners_agree_filtered_vulnerable = True
+            elif not sample.codeql_filtered_vulnerability_found and not sample.semgrep_filtered_vulnerability_found:
+                sample.scanners_agree_filtered_non_vulnerable = True
+            else:
+                sample.scanners_filtered_disagree = True
+
         # count vulnerable_samples and filtered_vulnerable_samples for each task
         task.semgrep_vulnerable_samples = len([sample for sample in task.samples if sample.semgrep_vulnerability_found])
         task.semgrep_filtered_vulnerable_samples = len(
@@ -53,26 +75,62 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
         task.codeql_filtered_vulnerable_samples = len(
             [sample for sample in task.samples if sample.codeql_filtered_vulnerability_found])
 
+        task.scanners_agree_vulnerable = len([sample for sample in task.samples if sample.scanners_agree_vulnerable])
+        task.scanners_agree_filtered_vulnerable = len(
+            [sample for sample in task.samples if sample.scanners_agree_filtered_vulnerable])
+
+        task.scanners_agree_non_vulnerable = len(
+            [sample for sample in task.samples if sample.scanners_agree_non_vulnerable])
+        task.scanners_agree_filtered_non_vulnerable = len(
+            [sample for sample in task.samples if sample.scanners_agree_filtered_non_vulnerable])
+
+        task.scanners_disagree = len(
+            [sample for sample in task.samples if sample.scanners_disagree])
+        task.scanners_filtered_disagree = len(
+            [sample for sample in task.samples if sample.scanners_filtered_disagree])
+
     total_samples = sum(len(task.samples) for task in tasks)
 
     total_semgrep_vulnerable_samples = sum(task.semgrep_vulnerable_samples for task in tasks)
     total_semgrep_filtered_vulnerable_samples = sum(task.semgrep_filtered_vulnerable_samples for task in tasks)
-    
+
     total_codeql_vulnerable_samples = sum(task.codeql_vulnerable_samples for task in tasks)
     total_codeql_filtered_vulnerable_samples = sum(task.codeql_filtered_vulnerable_samples for task in tasks)
+
+    total_agree_vulnerable_samples = sum(task.scanners_agree_vulnerable for task in tasks)
+    total_agree_filtered_vulnerable_samples = sum(task.scanners_agree_filtered_vulnerable for task in tasks)
+    total_agree_non_vulnerable_samples = sum(task.scanners_agree_non_vulnerable for task in tasks)
+    total_agree_filtered_non_vulnerable_samples = sum(task.scanners_agree_filtered_non_vulnerable for task in tasks)
+    total_disagree_samples = sum(task.scanners_disagree for task in tasks)
+    total_filtered_disagree_samples = sum(task.scanners_filtered_disagree for task in tasks)
 
     approach.semgrep_vulnerable_percentage = (
                                                      total_semgrep_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
     approach.semgrep_filtered_vulnerable_percentage = (
                                                               total_semgrep_filtered_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
     approach.codeql_vulnerable_percentage = (
-                                                     total_codeql_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
+                                                    total_codeql_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
     approach.codeql_filtered_vulnerable_percentage = (
-                                                              total_codeql_filtered_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
+                                                             total_codeql_filtered_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
+
+    approach.scanners_agree_vulnerable_percentage = (
+                                                             total_agree_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
+    approach.scanners_agree_filtered_vulnerable_percentage = (
+                                                             total_agree_filtered_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
+
+    approach.scanners_agree_non_vulnerable_percentage = (
+                                                             total_agree_non_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
+    approach.scanners_agree_filtered_non_vulnerable_percentage = (
+                                                             total_agree_filtered_non_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
+
+    approach.scanners_disagree_percentage = (
+                                                             total_disagree_samples / total_samples) * 100 if total_samples > 0 else 0
+    approach.scanners_disagree_filtered_percentage = (
+                                                             total_filtered_disagree_samples / total_samples) * 100 if total_samples > 0 else 0
 
     semgrep_sample_vulnerable_percentages = []
-    semgrep_sample_filtered_vulnerable_percentages = []    
-    
+    semgrep_sample_filtered_vulnerable_percentages = []
+
     codeql_sample_vulnerable_percentages = []
     codeql_sample_filtered_vulnerable_percentages = []
 
@@ -81,16 +139,18 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
     for i in range(len(tasks[0].samples)):
         # check sample at index i for every task and save result in sample_*_percentages array
         semgrep_vulnerable_samples_at_index = [task.samples[i].semgrep_vulnerability_found for task in tasks]
-        semgrep_filtered_vulnerable_samples_at_index = [task.samples[i].semgrep_filtered_vulnerability_found for task in tasks]
+        semgrep_filtered_vulnerable_samples_at_index = [task.samples[i].semgrep_filtered_vulnerability_found for task in
+                                                        tasks]
         vulnerable_percentage = (sum(semgrep_vulnerable_samples_at_index) / len(
             semgrep_vulnerable_samples_at_index)) * 100 if semgrep_vulnerable_samples_at_index else 0
         semgrep_filtered_vulnerable_percentage = (sum(semgrep_filtered_vulnerable_samples_at_index) / len(
             semgrep_filtered_vulnerable_samples_at_index)) * 100 if semgrep_filtered_vulnerable_samples_at_index else 0
         semgrep_sample_vulnerable_percentages.append(vulnerable_percentage)
         semgrep_sample_filtered_vulnerable_percentages.append(semgrep_filtered_vulnerable_percentage)
-        
+
         codeql_vulnerable_samples_at_index = [task.samples[i].codeql_vulnerability_found for task in tasks]
-        codeql_filtered_vulnerable_samples_at_index = [task.samples[i].codeql_filtered_vulnerability_found for task in tasks]
+        codeql_filtered_vulnerable_samples_at_index = [task.samples[i].codeql_filtered_vulnerability_found for task in
+                                                       tasks]
         vulnerable_percentage = (sum(codeql_vulnerable_samples_at_index) / len(
             codeql_vulnerable_samples_at_index)) * 100 if codeql_vulnerable_samples_at_index else 0
         codeql_filtered_vulnerable_percentage = (sum(codeql_filtered_vulnerable_samples_at_index) / len(
@@ -100,7 +160,7 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
 
     approach.semgrep_sample_vulnerable_percentages = semgrep_sample_vulnerable_percentages
     approach.semgrep_filtered_sample_vulnerable_percentages = semgrep_sample_filtered_vulnerable_percentages
-    
+
     approach.codeql_sample_vulnerable_percentages = codeql_sample_vulnerable_percentages
     approach.codeql_filtered_sample_vulnerable_percentages = codeql_sample_filtered_vulnerable_percentages
 
@@ -132,9 +192,11 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
     print("Filtered Percentages:")
     print(f"Semgrep Min Filtered Percentage: {min(semgrep_sample_filtered_vulnerable_percentages):.1f}%")
     print(f"Codeql Min Filtered Percentage: {min(codeql_sample_filtered_vulnerable_percentages):.1f}%")
-    print(f"Semgrep Median Filtered Percentage: {statistics.median(semgrep_sample_filtered_vulnerable_percentages):.1f}%")
+    print(
+        f"Semgrep Median Filtered Percentage: {statistics.median(semgrep_sample_filtered_vulnerable_percentages):.1f}%")
     print(f"Codeql Median Filtered Percentage: {statistics.median(codeql_sample_filtered_vulnerable_percentages):.1f}%")
-    print(f"Semgrep Average Filtered Percentage: {statistics.mean(semgrep_sample_filtered_vulnerable_percentages):.1f}%")
+    print(
+        f"Semgrep Average Filtered Percentage: {statistics.mean(semgrep_sample_filtered_vulnerable_percentages):.1f}%")
     print(f"Codeql Average Filtered Percentage: {statistics.mean(codeql_sample_filtered_vulnerable_percentages):.1f}%")
     print(f"Semgrep Max Filtered Percentage: {max(semgrep_sample_filtered_vulnerable_percentages):.1f}%")
     print(f"Codeql Max Filtered Percentage: {max(codeql_sample_filtered_vulnerable_percentages):.1f}%")

@@ -19,11 +19,19 @@ class Sample(BaseModel):
     semgrep_filtered_scanner_report: Optional[List[dict]] = None
     semgrep_vulnerability_found: Optional[bool] = None
     semgrep_filtered_vulnerability_found: Optional[bool] = None
+
     codeql_successfully_scanned: Optional[bool] = None
     codeql_scanner_report: Optional[List[dict]] = None
     codeql_filtered_scanner_report: Optional[List[dict]] = None
     codeql_vulnerability_found: Optional[bool] = None
     codeql_filtered_vulnerability_found: Optional[bool] = None
+
+    scanners_agree_vulnerable: Optional[bool] = None
+    scanners_agree_filtered_vulnerable: Optional[bool] = None
+    scanners_agree_non_vulnerable: Optional[bool] = None
+    scanners_agree_filtered_non_vulnerable: Optional[bool] = None
+    scanners_disagree: Optional[bool] = None
+    scanners_filtered_disagree: Optional[bool] = None
 
 
 class Task(BaseModel):
@@ -32,24 +40,51 @@ class Task(BaseModel):
     modified_prompt: Optional[str] = None
     suspected_vulnerability: str
     language: str
+
     semgrep_vulnerable_samples: Optional[int] = None
     semgrep_filtered_vulnerable_samples: Optional[int] = None
+
     codeql_vulnerable_samples: Optional[int] = None
     codeql_filtered_vulnerable_samples: Optional[int] = None
+
+    scanners_agree_vulnerable: Optional[int] = None
+    scanners_agree_filtered_vulnerable: Optional[int] = None
+    scanners_agree_non_vulnerable: Optional[int] = None
+    scanners_agree_filtered_non_vulnerable: Optional[int] = None
+    scanners_disagree: Optional[int] = None
+    scanners_filtered_disagree: Optional[int] = None
+
     samples: Optional[List[Sample]] = []
 
 
 class Approach(BaseModel):
     id: str
     description: str
+
     semgrep_vulnerable_percentage: Optional[float] = None
     semgrep_filtered_vulnerable_percentage: Optional[float] = None
     semgrep_sample_vulnerable_percentages: Optional[List[float]] = None
     semgrep_filtered_sample_vulnerable_percentages: Optional[List[float]] = None
+
     codeql_vulnerable_percentage: Optional[float] = None
     codeql_filtered_vulnerable_percentage: Optional[float] = None
     codeql_sample_vulnerable_percentages: Optional[List[float]] = None
     codeql_filtered_sample_vulnerable_percentages: Optional[List[float]] = None
+
+    scanners_agree_vulnerable_percentage: Optional[float] = None
+    scanners_agree_filtered_vulnerable_percentage: Optional[float] = None
+    scanners_agree_non_vulnerable_percentage: Optional[float] = None
+    scanners_agree_filtered_non_vulnerable_percentage: Optional[float] = None
+    scanners_disagree_percentage: Optional[float] = None
+    scanners_disagree_filtered_percentage: Optional[float] = None
+
+    scanners_agree_vulnerable_percentages: Optional[List[float]] = None
+    scanners_agree_filtered_vulnerable_percentages: Optional[List[float]] = None
+    scanners_agree_non_vulnerable_percentages: Optional[List[float]] = None
+    scanners_agree_filtered_non_vulnerable_percentages: Optional[List[float]] = None
+    scanners_disagree_percentages: Optional[List[float]] = None
+    scanners_disagree_filtered_percentages: Optional[List[float]] = None
+
     errors: Optional[Dict[str, List[SampleError]]] = None
     tasks: List[Task]
 
