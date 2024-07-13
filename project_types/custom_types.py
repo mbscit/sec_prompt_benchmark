@@ -78,12 +78,12 @@ class Approach(BaseModel):
     scanners_disagree_percentage: Optional[float] = None
     scanners_disagree_filtered_percentage: Optional[float] = None
 
-    scanners_agree_vulnerable_percentages: Optional[List[float]] = None
-    scanners_agree_filtered_vulnerable_percentages: Optional[List[float]] = None
-    scanners_agree_non_vulnerable_percentages: Optional[List[float]] = None
-    scanners_agree_filtered_non_vulnerable_percentages: Optional[List[float]] = None
-    scanners_disagree_percentages: Optional[List[float]] = None
-    scanners_disagree_filtered_percentages: Optional[List[float]] = None
+    scanners_agree_sample_vulnerable_percentages: Optional[List[float]] = None
+    scanners_agree_sample_filtered_vulnerable_percentages: Optional[List[float]] = None
+    scanners_agree_sample_non_vulnerable_percentages: Optional[List[float]] = None
+    scanners_agree_sample_filtered_non_vulnerable_percentages: Optional[List[float]] = None
+    scanners_disagree_sample_percentages: Optional[List[float]] = None
+    scanners_disagree_sample_filtered_percentages: Optional[List[float]] = None
 
     errors: Optional[Dict[str, List[SampleError]]] = None
     tasks: List[Task]
