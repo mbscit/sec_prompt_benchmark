@@ -265,14 +265,14 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
     print("Filtered Percentages:")
     print(f"Semgrep Min Filtered Percentage: {min(semgrep_sample_filtered_vulnerable_percentages):.1f}%")
     print(f"Codeql Min Filtered Percentage: {min(codeql_sample_filtered_vulnerable_percentages):.1f}%")
-    print(f"Scanners Agree Min Filtered Percentage: {min(scanners_agree_sample_filtered_vulnerable_percentages):.1f}%")
+    print(f"Scanners Agree Vulnerable Min Filtered Percentage: {min(scanners_agree_sample_filtered_vulnerable_percentages):.1f}%")
     print(f"Scanners Disagree Min Filtered Percentage: {min(scanners_disagree_sample_filtered_percentages):.1f}%")
     print()
     print(
         f"Semgrep Median Filtered Percentage: {statistics.median(semgrep_sample_filtered_vulnerable_percentages):.1f}%")
     print(f"Codeql Median Filtered Percentage: {statistics.median(codeql_sample_filtered_vulnerable_percentages):.1f}%")
     print(
-        f"Scanners Agree Median Filtered Percentage: {statistics.median(scanners_agree_sample_filtered_vulnerable_percentages):.1f}%")
+        f"Scanners Agree Vulnerable Median Filtered Percentage: {statistics.median(scanners_agree_sample_filtered_vulnerable_percentages):.1f}%")
     print(
         f"Scanners Disagree Median Filtered Percentage: {statistics.median(scanners_disagree_sample_filtered_percentages):.1f}%")
     print()
@@ -280,13 +280,13 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
         f"Semgrep Average Filtered Percentage: {statistics.mean(semgrep_sample_filtered_vulnerable_percentages):.1f}%")
     print(f"Codeql Average Filtered Percentage: {statistics.mean(codeql_sample_filtered_vulnerable_percentages):.1f}%")
     print(
-        f"Scanners Agree Average Filtered Percentage: {statistics.mean(scanners_agree_sample_filtered_vulnerable_percentages):.1f}%")
+        f"Scanners Agree Average Vulnerable Filtered Percentage: {statistics.mean(scanners_agree_sample_filtered_vulnerable_percentages):.1f}%")
     print(
         f"Scanners Disagree Average Filtered Percentage: {statistics.mean(scanners_disagree_sample_filtered_percentages):.1f}%")
     print()
     print(f"Semgrep Max Filtered Percentage: {max(semgrep_sample_filtered_vulnerable_percentages):.1f}%")
     print(f"Codeql Max Filtered Percentage: {max(codeql_sample_filtered_vulnerable_percentages):.1f}%")
-    print(f"Scanners Agree Max Filtered Percentage: {max(scanners_agree_sample_filtered_vulnerable_percentages):.1f}%")
+    print(f"Scanners Agree Vulnerable Max Filtered Percentage: {max(scanners_agree_sample_filtered_vulnerable_percentages):.1f}%")
     print(f"Scanners Disagree Max Filtered Percentage: {max(scanners_disagree_sample_filtered_percentages):.1f}%")
 
 
