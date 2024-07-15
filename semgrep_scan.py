@@ -100,13 +100,13 @@ class SemgrepScanner:
                     # assuming samples in all tasks have the same length
                     # since validate_sample_integrity checks it
                     scan_futures = {}
-                    scanners = []
+                    scanners = {}
                     for i in indexes_to_consider:
-                        approach_copy = Approach(**approach.dict())
+                        approach_copy = approach.model_copy(deep=False)
                         # deep-copy errors, since it might be modified by multiple scanners simultaneously
                         approach_copy.errors = copy.deepcopy(approach_copy.errors)
                         scanner = SemgrepScanner()
-                        scanners.append(scanner)
+                        scanners[i] = scanner
                         scan_futures[executor.submit(scanner.scan_one, approach_copy, i)] = i
 
                     # Wait for all scanners to complete
@@ -171,6 +171,7 @@ class SemgrepScanner:
             print(f"Total Samples: {len(tasks)}")
             print(f"Successful Semgrep Scans: {self.successful_scans}")
             print(f"Error Samples: {self.error_samples}")
+
         shutil.rmtree(subfolder)
 
 

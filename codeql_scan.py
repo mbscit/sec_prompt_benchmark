@@ -112,7 +112,7 @@ class CodeQLScanner:
         utils.validate_task_integrity(tasks, ["id", "suspected_vulnerability"])
         utils.validate_sample_integrity(tasks, ["extracted_code"], num_samples)
 
-        if all(sample.codeql_successfully_scanned for task in tasks for sample in task.samples):
+        if not any(sample for task in tasks for sample in task.samples if not sample.codeql_successfully_scanned):
             print(f"Approach has already been scanned with codeql for all tasks")
             self.skipped_samples = len(tasks) * num_samples
         else:
@@ -213,7 +213,7 @@ class CodeQLScanner:
                             f" {analyze_result.stderr} ")
 
             print(f"Summary:")
-            print(f"Total Samples: {len(tasks)}")
+            print(f"Total Samples: {len(tasks) * num_samples}")
             print(f"Successful Codeql Scans: {self.successful_scans}")
             print(f"Skipped Samples: {self.skipped_samples}")
             print(f"Error Samples: {self.error_samples}")
