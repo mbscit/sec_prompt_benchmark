@@ -17,7 +17,7 @@ from project_types.custom_types import Approach, Task, Sample
 from semgrep_scan import SemgrepScanner
 
 
-def re_scan_extract(relevant_scan_errors, num_regenerations, approach, i):
+def re_extract(relevant_scan_errors, num_regenerations, approach, i):
     re_generate = not num_regenerations & 1  # only re-generate on even tries, otherwise only re-extract
     logging.info(
         f"Syntax errors found in {len(relevant_scan_errors)} samples at index {i}, "
@@ -51,7 +51,7 @@ def re_scan_extract(relevant_scan_errors, num_regenerations, approach, i):
     if re_generate:
         retry_on_rate_limit(response_generator.generate_missing, approach, i)
 
-    # (re-)extract and re-scan affected samples
+    # (re-)extract affected samples
     # if we didn't re-generate, we will use GPT to extract the code this time
     retry_on_rate_limit(code_extractor.extract_missing, approach, i, not re_generate)
 
@@ -138,6 +138,7 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
         print(f"Starting semgrep scan for approach")
         semgrep_scanner = SemgrepScanner()
         semgrep_scanner.scan_samples(approach)
+        previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
     print(f"Starting codeql scan")
     st = time.time()
@@ -145,9 +146,9 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
     codeql_scanner = CodeQLScanner()
     codeql_scanner.scan_samples(approach)
 
+    previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
     et = time.time()
 
-    previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
     print(f"Semgrep scan finished, time: {(et - st):.1f}s")
 
@@ -168,7 +169,7 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
                 if relevant_scan_errors:
                     logging.info(f"Syntax errors found in {len(relevant_scan_errors)} samples at index {i}, .")
 
-                    re_scan_extract(relevant_scan_errors, num_regenerations, approach, i)
+                    re_extract(relevant_scan_errors, num_regenerations, approach, i)
 
             semgrep_scanner = SemgrepScanner()
             semgrep_scanner.scan_samples(approach)
