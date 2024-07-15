@@ -95,9 +95,11 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
     approach = Approach(**data)
     previous_approach_dict = approach.dict(exclude_defaults=True)
 
-    generation_or_extraction_necessary = any(
-        not sample.generated_response or not sample.extracted_code for task in approach.tasks for sample in
-        task.samples)
+    generation_or_extraction_necessary = (
+            any(
+                task for task in approach.tasks if not task.samples or len(task.samples) < samples_per_task)
+            or any(not sample.generated_response or not sample.extracted_code for task in approach.tasks for sample in
+                   task.samples))
     if generation_or_extraction_necessary:
         for i in range(samples_per_task):
             print(f"Starting execution for sample {i}")
@@ -148,7 +150,6 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
 
     previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
     et = time.time()
-
 
     print(f"Semgrep scan finished, time: {(et - st):.1f}s")
 
