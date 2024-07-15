@@ -1,4 +1,5 @@
 import base64
+import copy
 import json
 import logging
 import os
@@ -6,6 +7,7 @@ import re
 import shutil
 import subprocess
 import uuid
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
 
 from dotenv import load_dotenv
@@ -48,7 +50,8 @@ class SemgrepScanner:
             if isinstance(result['extra']['metadata']['cwe'], str):
                 result['extra']['metadata']['cwe'] = re.sub(r'CWE-0+', 'CWE-', result['extra']['metadata']['cwe'])
             elif isinstance(result['extra']['metadata']['cwe'], list):
-                result['extra']['metadata']['cwe'] = [re.sub(r'CWE-0+', 'CWE-', cwe) for cwe in result['extra']['metadata']['cwe']]
+                result['extra']['metadata']['cwe'] = [re.sub(r'CWE-0+', 'CWE-', cwe) for cwe in
+                                                      result['extra']['metadata']['cwe']]
 
         return file_specific_results
 
@@ -74,7 +77,49 @@ class SemgrepScanner:
         file_name = f"{SemgrepScanner.encode_name(task.id)}.{file_extension}"
         return file_name
 
-    def scan_samples(self, approach: Approach, sample_index: int):
+    def scan_samples(self, approach: Approach, sample_index: int = -1):
+        if sample_index != -1:
+            self.scan_one(approach, sample_index)
+        else:
+            tasks = approach.tasks
+            utils.validate_task_integrity(tasks, ["id", "suspected_vulnerability"])
+            utils.validate_sample_integrity(tasks, ["extracted_code"])
+
+            indexes_to_consider = []
+            for sample_index in range(len(tasks[0].samples)):
+                if any([sample_index for task in tasks if
+                                       any(sample.id == sample_index and not sample.semgrep_successfully_scanned for
+                                           sample in task.samples)]):
+                    indexes_to_consider.append(sample_index)
+
+
+
+            with ThreadPoolExecutor() as executor:
+                # Create a scanner for every index
+                # assuming samples in all tasks have the same length
+                # since validate_sample_integrity checks it
+                scan_futures = {}
+                scanners = []
+                for i in indexes_to_consider:
+                    approach_copy = Approach(**approach.dict())
+                    # deep-copy errors, since it might be modified by multiple scanners simultaneously
+                    approach_copy.errors = copy.deepcopy(approach_copy.errors)
+                    scanner = SemgrepScanner()
+                    scanners.append(scanner)
+                    scan_futures[executor.submit(scanner.scan_one, approach_copy, i)] = i
+
+                # Wait for all scanners to complete
+                for future in as_completed(scan_futures):
+                    i = scan_futures[future]
+                    try:
+                        future.result()
+                        scanner = scanners[i]
+                        approach.update_errors("semgrep_scan", scanner.errors, i)
+                        print(f"Scan finished for sample {i}")
+                    except Exception as e:
+                        print(f"Error in scanner for sample {i}: {e}")
+
+    def scan_one(self, approach: Approach, sample_index: int):
         working_dir = relative_path_from_root('./tmp_code')
         os.makedirs(working_dir, exist_ok=True)
         subfolder = relative_path_from_root(os.path.join(working_dir, str(uuid.uuid4())))

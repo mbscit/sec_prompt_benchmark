@@ -64,7 +64,7 @@ def analyze(approach: Approach, results):
     tasks: List[Task] = approach.tasks
 
     utils.validate_task_integrity(tasks, ["id", "samples"])
-    utils.validate_sample_integrity(tasks, ["semgrep_successfully_scanned"])
+    utils.validate_sample_integrity(tasks, ["semgrep_successfully_scanned", "codeql_successfully_scanned"])
 
     results.update(
         {
@@ -98,14 +98,14 @@ def analyze(approach: Approach, results):
             "Average Codeql Filtered Percentage": statistics.mean(approach.codeql_filtered_sample_vulnerable_percentages),
             "Max Codeql Filtered Percentage": max(approach.codeql_filtered_sample_vulnerable_percentages),
             
-            "Min Scanners Agree Vulnerable Percentage": min(approach.scanners_agree_vulnerable_percentages),
-            "Median Scanners Agree Vulnerable Percentage": statistics.median(approach.scanners_agree_vulnerable_percentages),
-            "Average Scanners Agree Vulnerable Percentage": statistics.mean(approach.scanners_agree_vulnerable_percentages),
-            "Max Scanners Agree Vulnerable Percentage": max(approach.scanners_agree_vulnerable_percentages),
-            "Min Scanners Agree Vulnerable Filtered Percentage": min(approach.scanners_agree_filtered_vulnerable_percentages),
-            "Median Scanners Agree Vulnerable Filtered Percentage": statistics.median(approach.scanners_agree_filtered_vulnerable_percentages),
-            "Average Scanners Agree Vulnerable Filtered Percentage": statistics.mean(approach.scanners_agree_filtered_vulnerable_percentages),
-            "Max Scanners Agree Vulnerable Filtered Percentage": max(approach.scanners_agree_filtered_vulnerable_percentages),
+            "Min Scanners Agree Vulnerable Percentage": min(approach.scanners_agree_sample_vulnerable_percentages),
+            "Median Scanners Agree Vulnerable Percentage": statistics.median(approach.scanners_agree_sample_vulnerable_percentages),
+            "Average Scanners Agree Vulnerable Percentage": statistics.mean(approach.scanners_agree_sample_vulnerable_percentages),
+            "Max Scanners Agree Vulnerable Percentage": max(approach.scanners_agree_sample_vulnerable_percentages),
+            "Min Scanners Agree Vulnerable Filtered Percentage": min(approach.scanners_agree_sample_filtered_vulnerable_percentages),
+            "Median Scanners Agree Vulnerable Filtered Percentage": statistics.median(approach.scanners_agree_sample_filtered_vulnerable_percentages),
+            "Average Scanners Agree Vulnerable Filtered Percentage": statistics.mean(approach.scanners_agree_sample_filtered_vulnerable_percentages),
+            "Max Scanners Agree Vulnerable Filtered Percentage": max(approach.scanners_agree_sample_filtered_vulnerable_percentages),
             
             "Min Scanners Agree Non-Vulnerable Percentage": min(approach.scanners_agree_sample_non_vulnerable_percentages),
             "Median Scanners Agree Non-Vulnerable Percentage": statistics.median(approach.scanners_agree_sample_non_vulnerable_percentages),

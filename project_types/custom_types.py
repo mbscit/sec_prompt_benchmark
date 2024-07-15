@@ -9,6 +9,16 @@ class SampleError(BaseModel):
     sample_index: int
     error: str
 
+    def __eq__(self, other):
+        if isinstance(other, SampleError):
+            return (self.task_id == other.task_id and
+                    self.sample_index == other.sample_index and
+                    self.error == other.error)
+        return False
+
+    def __hash__(self):
+        return hash((self.task_id, self.sample_index, self.error))
+
 
 class Sample(BaseModel):
     index: int
@@ -61,6 +71,8 @@ class Approach(BaseModel):
     id: str
     description: str
 
+    errors: Optional[Dict[str, List[SampleError]]] = None
+
     semgrep_vulnerable_percentage: Optional[float] = None
     semgrep_filtered_vulnerable_percentage: Optional[float] = None
     semgrep_sample_vulnerable_percentages: Optional[List[float]] = None
@@ -85,7 +97,6 @@ class Approach(BaseModel):
     scanners_disagree_sample_percentages: Optional[List[float]] = None
     scanners_disagree_sample_filtered_percentages: Optional[List[float]] = None
 
-    errors: Optional[Dict[str, List[SampleError]]] = None
     tasks: List[Task]
 
     def update_errors(self, step: str, new_errors: List[SampleError], sample_index: int):
@@ -102,6 +113,9 @@ class Approach(BaseModel):
         if new_errors:
             self.errors[step].extend(new_errors)
 
+        # remove duplicates
+        self.errors[step] = list(set(self.errors[step]))
+
 
 class Prompt(BaseModel):
     id: str
@@ -109,6 +123,8 @@ class Prompt(BaseModel):
     suspected_vulnerability: str
     language: str
     source: str
+    insecure_example: Optional[str] = None
+    secure_example: Optional[str] = None
 
 
 class SemgrepSeverity(Enum):

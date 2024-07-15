@@ -9,11 +9,11 @@ from dotenv import load_dotenv
 
 import analyze_scan_results
 import utils
+from codeql_scan import CodeQLScanner
 from extract_code_from_generated_response import CodeExtractor
 from filter_config import SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS
 from generate_response_from_modified_prompts import ResponseGenerator
 from project_types.custom_types import Approach, Task, Sample
-from codeql_scan import CodeQLScanner
 from semgrep_scan import SemgrepScanner
 
 
@@ -120,14 +120,16 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
 
         print(f"Starting semgrep scan for sample {i}")
         st = time.time()
+
         semgrep_scanner = SemgrepScanner()
         semgrep_scanner.scan_samples(approach, i)
 
-        et = time.time()
-        previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
-        print(f"Semgrep scan for sample {i} finished, time: {(et - st):.1f}s")
+    et = time.time()
+    previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
+    print(f"Semgrep scan for sample {i} finished, time: {(et - st):.1f}s")
 
-        print()
+    print()
+
 
     print(f"Starting codeql scan")
     st = time.time()
@@ -136,6 +138,8 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
     codeql_scanner.scan_samples(approach)
 
     et = time.time()
+
+    previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
     print(f"Semgrep scan finished, time: {(et - st):.1f}s")
 
@@ -157,18 +161,19 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
                     logging.info(f"Syntax errors found in {len(relevant_scan_errors)} samples at index {i}, .")
 
                     re_scan_extract(relevant_scan_errors, num_regenerations, approach, i)
-                    semgrep_scanner = SemgrepScanner()
-                    semgrep_scanner.scan_samples(approach, i)
 
+            semgrep_scanner = SemgrepScanner()
+            semgrep_scanner.scan_samples(approach)
             codeql_scanner = CodeQLScanner()
             codeql_scanner.scan_samples(approach)
+            previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
     relevant_scan_errors = get_relevant_scan_errors(approach)
 
     if relevant_scan_errors:
         logging.error(
             f"""Failed to resolve syntax errors in {len(set([error.task_id + "-" + str(error.sample_index) for error in relevant_scan_errors]))} samples after 3 attempts.
-                Check the error field in data file for more information.""")
+                    Check the error field in data file for more information.""")
 
     previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
@@ -177,24 +182,26 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
 
 
 def get_relevant_scan_errors(approach, i=-1):
-    try:
+    if approach.errors and "semgrep_scan" in approach.errors:
         semgrep_scan_errors = [error for error in approach.errors["semgrep_scan"]]
         if i > -1:
             semgrep_scan_errors = [error for error in semgrep_scan_errors if error.sample_index == i]
-    except KeyError:
+    else:
         semgrep_scan_errors = []
 
     relevant_scan_errors = [error for error in semgrep_scan_errors if
                             error.error.startswith("Syntax error at")
                             or error.error.startswith("Lexical error at")]
-    try:
+
+    if approach.errors and "codeql_scan" in approach.errors:
         codeql_scan_errors = [error for error in approach.errors["codeql_scan"]]
         if i > -1:
             codeql_scan_errors = [error for error in codeql_scan_errors if error.sample_index == i]
-    except KeyError:
+    else:
         codeql_scan_errors = []
     relevant_scan_errors += [error for error in codeql_scan_errors if
                              error.error.startswith("Extraction failed in")]
+
     return relevant_scan_errors
 
 

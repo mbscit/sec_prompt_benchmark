@@ -123,12 +123,18 @@ class CodeQLScanner:
             for language in languages:
                 # get all tasks with the same language
                 language_tasks = [task for task in tasks if task.language == language]
-                tasks_to_write = [task for task in language_tasks if
-                                  any(not sample.codeql_successfully_scanned for sample in task.samples)]
+                tasks_to_consider = [task for task in language_tasks if
+                                     any(not sample.codeql_successfully_scanned for sample in task.samples)]
 
-                self.skipped_samples += len(language_tasks) - len(tasks_to_write)
+                samples_to_scan = [sample for task in tasks_to_consider for sample in task.samples if
+                                   not sample.codeql_successfully_scanned]
+                num_samples_to_skip = (len(language_tasks) * num_samples) - len(samples_to_scan)
+                self.skipped_samples += num_samples_to_skip
 
-                if len(tasks_to_write):
+                print(
+                    f"Scanning {len(samples_to_scan)}, skipping {num_samples_to_skip} already scanned samples for language {language}")
+
+                if len(samples_to_scan):
 
                     language_folder = os.path.join(subfolder, language)
                     os.makedirs(language_folder)
@@ -137,8 +143,9 @@ class CodeQLScanner:
                         sample_folder = os.path.join(language_folder, str(sample_index))
                         os.makedirs(sample_folder, exist_ok=True)
 
-                        for task in tasks_to_write:
-                            self.write_extracted_code(task, sample_index, sample_folder)
+                        for task in tasks_to_consider:
+                            if not task.samples[sample_index].codeql_successfully_scanned:
+                                self.write_extracted_code(task, sample_index, sample_folder)
 
                     database_path = os.path.join(language_folder, "codeql-database")
                     results_path = os.path.join(language_folder, "codeql-results.json")
@@ -150,7 +157,9 @@ class CodeQLScanner:
                         database_create_command = f"codeql database create --language=\"c-cpp\" --source-root=\"{language_folder}\" {database_path}"
                     else:
                         database_create_command = f"codeql database create --language={language} --source-root=\"{language_folder}\" {database_path}"
-                    create_result = subprocess.run(database_create_command, shell=True, capture_output=True, text=True)
+
+                    create_result = subprocess.run(database_create_command, shell=True, capture_output=True,
+                                                   text=True)
                     logging.info(f"Codeql database create result for language {language}: {create_result.stdout}")
 
                     if create_result.returncode != 0:
@@ -168,27 +177,29 @@ class CodeQLScanner:
                     if analyze_result.returncode == 0:
                         json_output = json.loads(open(results_path, 'r').read())
 
-                        for task in tasks_to_write:
+                        for task in tasks_to_consider:
 
                             for sample_index in range(num_samples):
                                 try:
                                     sample: Sample = next(
                                         (sample for sample in task.samples if sample.index == sample_index),
                                         None)
+                                    if not sample.codeql_successfully_scanned:
+                                        file_specific_errors = self.extract_scan_errors(json_output, task,
+                                                                                        sample_index)
+                                        sample.codeql_scanner_report = self.extract_scan_results(json_output, task,
+                                                                                                 sample_index)
 
-                                    file_specific_errors = self.extract_scan_errors(json_output, task, sample_index)
-                                    sample.codeql_scanner_report = self.extract_scan_results(json_output, task,
-                                                                                             sample_index)
-
-                                    if not file_specific_errors:
-                                        sample.codeql_successfully_scanned = True
-                                        self.successful_scans += 1
-                                    else:
-                                        sample.codeql_successfully_scanned = False
-                                        self.error_samples += 1
+                                        if not file_specific_errors:
+                                            sample.codeql_successfully_scanned = True
+                                            self.successful_scans += 1
+                                        else:
+                                            sample.codeql_successfully_scanned = False
+                                            self.error_samples += 1
 
                                 except Exception as e:
-                                    logging.error(f"Error processing results for {task.id} sample {sample_index}: {e}")
+                                    logging.error(
+                                        f"Error processing results for {task.id} sample {sample_index}: {e}")
                                     self.errors.append(
                                         SampleError(task_id=task.id, sample_index=sample_index, error=str(e)))
                                     self.error_samples += 1
@@ -196,9 +207,10 @@ class CodeQLScanner:
                                 approach.update_errors("codeql_scan", self.errors, sample_index)
 
                     else:
-                        raise Exception(f"Codeql database analyze failed for language {language}. "
-                                        f"{create_result.stdout} "
-                                        f" {create_result.stderr} ")
+                        raise Exception(
+                            f"Codeql database analyze failed for language {language}, sample {sample_index}. "
+                            f"{analyze_result.stdout} "
+                            f" {analyze_result.stderr} ")
 
             print(f"Summary:")
             print(f"Total Samples: {len(tasks)}")
@@ -218,7 +230,7 @@ if __name__ == "__main__":
     scanner = CodeQLScanner()
 
     try:
-        scanner.scan_samples(approach, sample_index)
+        scanner.scan_samples(approach)
     except Exception as e:
         raise e
     finally:
