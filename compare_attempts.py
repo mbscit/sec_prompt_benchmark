@@ -32,7 +32,7 @@ def compare(data_folder_path: str):
                     f"{data_file_path} is not analyzed yet, analyze it first"
                 )
 
-    matrix.sort(key=lambda row: row["Filtered Vulnerable Samples"])
+    matrix.sort(key=lambda row: row["Scanners Agree Filtered Vulnerable Samples"])
 
     print_matrix = pd.DataFrame.from_records(
         matrix,
@@ -40,14 +40,15 @@ def compare(data_folder_path: str):
             "Filename",
             "Total Tasks",
             "Total Samples",
-            "Semgrep Vulnerable Samples",
-            "Codeql Vulnerable Samples",
-            "Scanners Agree Vulnerable Samples",
-            "Scanners Disagree Samples",
-            "Semgrep Filtered Vulnerable Samples",
-            "Codeql Filtered Vulnerable Samples",
             "Scanners Agree Filtered Vulnerable Samples",
             "Scanners Disagree Filtered Samples",
+            "Semgrep Filtered Vulnerable Samples",
+            "Codeql Filtered Vulnerable Samples",
+            "Scanners Agree Vulnerable Samples",
+            "Scanners Disagree Samples",
+            "Semgrep Vulnerable Samples",
+            "Codeql Vulnerable Samples",
+
         ],
     ).to_string(index=False, header=True)
 
