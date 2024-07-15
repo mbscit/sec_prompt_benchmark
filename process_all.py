@@ -12,6 +12,7 @@ from process_one import process_file
 def process_all(data_folder_path: str):
     load_dotenv()
 
+    errors = []
     for file in os.listdir(data_folder_path):
         data_file_path = os.path.join(data_folder_path, file)
         # checking if it is a file
@@ -19,7 +20,19 @@ def process_all(data_folder_path: str):
             print()
             print(f"processing file: {data_file_path}")
             print()
-            process_file(data_file_path, SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
+            try:
+                process_file(data_file_path, SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
+            except Exception as e:
+                print(f"Error processing file: {data_file_path}")
+                errors.append((data_file_path, e))
+                print(e)
+
+    if errors:
+        print()
+        print("Errors occurred while processing the following files:")
+        for error in errors:
+            print(error)
+        print()
 
 
 if __name__ == "__main__":
