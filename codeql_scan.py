@@ -113,7 +113,7 @@ class CodeQLScanner:
         utils.validate_sample_integrity(tasks, ["extracted_code"], num_samples)
 
         if all(sample.codeql_successfully_scanned for task in tasks for sample in task.samples):
-            print(f"Approach has already been scanned for all tasks")
+            print(f"Approach has already been scanned with codeql for all tasks")
             self.skipped_samples = len(tasks) * num_samples
         else:
 
