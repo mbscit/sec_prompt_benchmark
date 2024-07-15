@@ -95,41 +95,49 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
     approach = Approach(**data)
     previous_approach_dict = approach.dict(exclude_defaults=True)
 
-    for i in range(samples_per_task):
-        print(f"Starting execution for sample {i}")
+    generation_or_extraction_necessary = any(
+        not sample.generated_response or not sample.extracted_code for task in approach.tasks for sample in
+        task.samples)
+    if generation_or_extraction_necessary:
+        for i in range(samples_per_task):
+            print(f"Starting execution for sample {i}")
 
-        print(f"Starting response generation for sample {i}")
-        st = time.time()
-        response_generator = ResponseGenerator()
-        retry_on_rate_limit(response_generator.generate_missing, approach, i)
-        et = time.time()
-        previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
-        print(f"Response generation for sample {i} finished, time: {(et - st):.2f}s")
+            print(f"Starting response generation for sample {i}")
+            st = time.time()
+            response_generator = ResponseGenerator()
+            retry_on_rate_limit(response_generator.generate_missing, approach, i)
+            et = time.time()
+            previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
+            print(f"Response generation for sample {i} finished, time: {(et - st):.2f}s")
 
-        print()
+            print()
 
-        print(f"Starting response extraction for sample {i}: {(et - st):.2f}s")
-        st = time.time()
-        code_extractor = CodeExtractor()
-        retry_on_rate_limit(code_extractor.extract_missing, approach, i)
-        et = time.time()
-        previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
-        print(f"Response extraction for sample {i} finished, time: {(et - st):.2f}s")
+            print(f"Starting response extraction for sample {i}: {(et - st):.2f}s")
+            st = time.time()
+            code_extractor = CodeExtractor()
+            retry_on_rate_limit(code_extractor.extract_missing, approach, i)
+            et = time.time()
+            previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
+            print(f"Response extraction for sample {i} finished, time: {(et - st):.2f}s")
 
-        print()
+            print()
 
-        print(f"Starting semgrep scan for sample {i}")
-        st = time.time()
+            print(f"Starting semgrep scan for sample {i}")
+            st = time.time()
 
+            semgrep_scanner = SemgrepScanner()
+            semgrep_scanner.scan_samples(approach, i)
+
+            et = time.time()
+            previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
+            print(f"Semgrep scan for sample {i} finished, time: {(et - st):.1f}s")
+
+            print()
+
+    else:
+        print(f"Starting semgrep scan for approach")
         semgrep_scanner = SemgrepScanner()
-        semgrep_scanner.scan_samples(approach, i)
-
-    et = time.time()
-    previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
-    print(f"Semgrep scan for sample {i} finished, time: {(et - st):.1f}s")
-
-    print()
-
+        semgrep_scanner.scan_samples(approach)
 
     print(f"Starting codeql scan")
     st = time.time()
