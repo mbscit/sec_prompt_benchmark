@@ -9,16 +9,39 @@ class SampleError(BaseModel):
     sample_index: int
     error: str
 
+    def __eq__(self, other):
+        if isinstance(other, SampleError):
+            return (self.task_id == other.task_id and
+                    self.sample_index == other.sample_index and
+                    self.error == other.error)
+        return False
+
+    def __hash__(self):
+        return hash((self.task_id, self.sample_index, self.error))
+
 
 class Sample(BaseModel):
     index: int
     generated_response: Optional[str] = None
     extracted_code: Optional[str] = None
-    successfully_scanned: Optional[bool] = None
-    scanner_report: Optional[List[dict]] = None
-    filtered_scanner_report: Optional[List[dict]] = None
-    vulnerability_found: Optional[bool] = None
-    filtered_vulnerability_found: Optional[bool] = None
+    semgrep_successfully_scanned: Optional[bool] = None
+    semgrep_scanner_report: Optional[List[dict]] = None
+    semgrep_filtered_scanner_report: Optional[List[dict]] = None
+    semgrep_vulnerability_found: Optional[bool] = None
+    semgrep_filtered_vulnerability_found: Optional[bool] = None
+
+    codeql_successfully_scanned: Optional[bool] = None
+    codeql_scanner_report: Optional[List[dict]] = None
+    codeql_filtered_scanner_report: Optional[List[dict]] = None
+    codeql_vulnerability_found: Optional[bool] = None
+    codeql_filtered_vulnerability_found: Optional[bool] = None
+
+    scanners_agree_vulnerable: Optional[bool] = None
+    scanners_agree_filtered_vulnerable: Optional[bool] = None
+    scanners_agree_non_vulnerable: Optional[bool] = None
+    scanners_agree_filtered_non_vulnerable: Optional[bool] = None
+    scanners_disagree: Optional[bool] = None
+    scanners_filtered_disagree: Optional[bool] = None
 
 
 class Task(BaseModel):
@@ -27,19 +50,53 @@ class Task(BaseModel):
     modified_prompt: Optional[str] = None
     suspected_vulnerability: str
     language: str
-    vulnerable_samples: Optional[int] = None
-    filtered_vulnerable_samples: Optional[int] = None
+
+    semgrep_vulnerable_samples: Optional[int] = None
+    semgrep_filtered_vulnerable_samples: Optional[int] = None
+
+    codeql_vulnerable_samples: Optional[int] = None
+    codeql_filtered_vulnerable_samples: Optional[int] = None
+
+    scanners_agree_vulnerable: Optional[int] = None
+    scanners_agree_filtered_vulnerable: Optional[int] = None
+    scanners_agree_non_vulnerable: Optional[int] = None
+    scanners_agree_filtered_non_vulnerable: Optional[int] = None
+    scanners_disagree: Optional[int] = None
+    scanners_filtered_disagree: Optional[int] = None
+
     samples: Optional[List[Sample]] = []
 
 
 class Approach(BaseModel):
     id: str
     description: str
-    vulnerable_percentage: Optional[float] = None
-    filtered_vulnerable_percentage: Optional[float] = None
-    sample_vulnerable_percentages: Optional[List[float]] = None
-    filtered_sample_vulnerable_percentages: Optional[List[float]] = None
+
     errors: Optional[Dict[str, List[SampleError]]] = None
+
+    semgrep_vulnerable_percentage: Optional[float] = None
+    semgrep_filtered_vulnerable_percentage: Optional[float] = None
+    semgrep_sample_vulnerable_percentages: Optional[List[float]] = None
+    semgrep_filtered_sample_vulnerable_percentages: Optional[List[float]] = None
+
+    codeql_vulnerable_percentage: Optional[float] = None
+    codeql_filtered_vulnerable_percentage: Optional[float] = None
+    codeql_sample_vulnerable_percentages: Optional[List[float]] = None
+    codeql_filtered_sample_vulnerable_percentages: Optional[List[float]] = None
+
+    scanners_agree_vulnerable_percentage: Optional[float] = None
+    scanners_agree_filtered_vulnerable_percentage: Optional[float] = None
+    scanners_agree_non_vulnerable_percentage: Optional[float] = None
+    scanners_agree_filtered_non_vulnerable_percentage: Optional[float] = None
+    scanners_disagree_percentage: Optional[float] = None
+    scanners_disagree_filtered_percentage: Optional[float] = None
+
+    scanners_agree_sample_vulnerable_percentages: Optional[List[float]] = None
+    scanners_agree_sample_filtered_vulnerable_percentages: Optional[List[float]] = None
+    scanners_agree_sample_non_vulnerable_percentages: Optional[List[float]] = None
+    scanners_agree_sample_filtered_non_vulnerable_percentages: Optional[List[float]] = None
+    scanners_disagree_sample_percentages: Optional[List[float]] = None
+    scanners_disagree_sample_filtered_percentages: Optional[List[float]] = None
+
     tasks: List[Task]
 
     def update_errors(self, step: str, new_errors: List[SampleError], sample_index: int):
@@ -56,6 +113,9 @@ class Approach(BaseModel):
         if new_errors:
             self.errors[step].extend(new_errors)
 
+        # remove duplicates
+        self.errors[step] = list(set(self.errors[step]))
+
 
 class Prompt(BaseModel):
     id: str
@@ -63,6 +123,8 @@ class Prompt(BaseModel):
     suspected_vulnerability: str
     language: str
     source: str
+    insecure_example: Optional[str] = None
+    secure_example: Optional[str] = None
 
 
 class SemgrepSeverity(Enum):
@@ -71,10 +133,23 @@ class SemgrepSeverity(Enum):
     ERROR = auto()
 
 
+class CodeqlProblemSeverity(Enum):
+    RECOMMENDATION = auto()
+    WARNING = auto()
+    ERROR = auto()
+
+
 class SemgrepConfidence(Enum):
     LOW = auto()
     MEDIUM = auto()
     HIGH = auto()
+
+
+class CodeqlPrecision(Enum):
+    LOW = auto()
+    MEDIUM = auto()
+    HIGH = auto()
+    VERY_HIGH = auto()
 
 
 language_extensions = {

@@ -23,8 +23,7 @@ def create_enum_script(enum_name):
     enum_script = f"from enum import Enum\n\n\n" \
                   f"class {enum_name}(Enum):\n"
     for value in enum_values:
-        # Create a valid Python identifier by replacing spaces with underscores and uppercasing
-        identifier = cwe_utils.convert_to_enum_identifier(value)
+        identifier = utils.convert_to_enum_identifier(value)
         enum_script += f"    {identifier} = \"{value}\"\n"
     return enum_script
 

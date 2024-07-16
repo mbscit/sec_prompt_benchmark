@@ -74,9 +74,13 @@ def validate_sample_integrity(tasks: List[Task], required_attributes: List[str],
 
             for sample in samples:
                 for attribute in required_attributes:
-                    if (not hasattr(sample, attribute)) or (
-                            getattr(sample, attribute) != 0 and (not getattr(sample, attribute))):
+                    if ((not hasattr(sample, attribute))
+                            or (
+                                    getattr(sample, attribute) != 0 and (not getattr(sample, attribute)))):
                         errors.append(f"Task {task.id}, Sample {i} is missing {attribute}")
+                    if isinstance(getattr(sample, attribute), bool) and not getattr(sample, attribute):
+                        errors.append(
+                            f"Task {task.id}, Sample {i}  {attribute} is False, check the errors attribute of the attempt.")
 
     if errors:
         raise ValueError(f"Errors in dataset - Aborting:\n" + "\n".join(errors))
@@ -124,8 +128,13 @@ def read_dataset_file(dataset_file_path) -> List[Prompt]:
     dataset = [Prompt(**d) for d in data]
     return dataset
 
+
 def write_dataset_file(data_file_path, prompts: List[Prompt]):
     file_name, file_extension = os.path.splitext(data_file_path)
     extracted_data_file_path = f"{file_name}{file_extension}"
     with open(extracted_data_file_path, 'w') as file:
         json.dump(prompts, file, indent=4, default=vars)
+
+
+def convert_to_enum_identifier(text: str) -> str:
+    return text.replace(" ", "_").replace("/", "_").replace("-", "_").upper()

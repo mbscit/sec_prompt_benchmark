@@ -14,22 +14,48 @@ print(f"removing scan results from: {data_file_path}")
 
 approach = utils.read_approaches_file(data_file_path)
 
-del approach.vulnerable_percentage
-del approach.filtered_vulnerable_percentage
-del approach.sample_vulnerable_percentages
-del approach.filtered_sample_vulnerable_percentages
+del approach.semgrep_vulnerable_percentage
+del approach.semgrep_filtered_vulnerable_percentage
+del approach.semgrep_sample_vulnerable_percentages
+del approach.semgrep_filtered_sample_vulnerable_percentages
 
-approach.errors.pop("scan", None)
+del approach.codeql_vulnerable_percentage
+del approach.codeql_filtered_vulnerable_percentage
+del approach.codeql_sample_vulnerable_percentages
+del approach.codeql_filtered_sample_vulnerable_percentages
+
+del approach.scanners_agree_sample_vulnerable_percentages
+del approach.scanners_agree_sample_filtered_vulnerable_percentages
+del approach.scanners_agree_sample_non_vulnerable_percentages
+del approach.scanners_agree_sample_filtered_non_vulnerable_percentages
+del approach.scanners_disagree_sample_percentages
+del approach.scanners_disagree_sample_filtered_percentages
+
+approach.errors.pop("semgrep_scan", None)
+approach.errors.pop("codeql_scan", None)
 
 for task in approach.tasks:
-    del task.vulnerable_samples
-    del task.filtered_vulnerable_samples
+    del task.semgrep_vulnerable_samples
+    del task.semgrep_filtered_vulnerable_samples
 
     for sample in task.samples:
-        del sample.successfully_scanned
-        del sample.scanner_report
-        del sample.filtered_scanner_report
-        del sample.vulnerability_found
-        del sample.filtered_vulnerability_found
+        del sample.semgrep_successfully_scanned
+        del sample.semgrep_scanner_report
+        del sample.semgrep_filtered_scanner_report
+        del sample.semgrep_vulnerability_found
+        del sample.semgrep_filtered_vulnerability_found
+
+        del sample.codeql_successfully_scanned
+        del sample.codeql_scanner_report
+        del sample.codeql_filtered_scanner_report
+        del sample.codeql_vulnerability_found
+        del sample.codeql_filtered_vulnerability_found
+
+        del sample.scanners_agree_vulnerable
+        del sample.scanners_agree_filtered_vulnerable
+        del sample.scanners_agree_non_vulnerable
+        del sample.scanners_agree_filtered_non_vulnerable
+        del sample.scanners_disagree
+        del sample.scanners_filtered_disagree
 
 utils.write_approaches_file(data_file_path, approach)
