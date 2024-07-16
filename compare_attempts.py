@@ -23,6 +23,8 @@ def compare(data_folder_path: str):
             if (
                 not approach.semgrep_vulnerable_percentage is None
                 and not approach.semgrep_filtered_vulnerable_percentage is None
+                and not approach.codeql_vulnerable_percentage is None
+                and not approach.codeql_filtered_vulnerable_percentage is None
             ):
                 results = {"Filename": file}
                 matrix.append(results)
