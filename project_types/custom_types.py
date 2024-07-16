@@ -133,10 +133,23 @@ class SemgrepSeverity(Enum):
     ERROR = auto()
 
 
+class CodeqlSeverity(Enum):
+    RECOMMENDATION = auto()
+    WARNING = auto()
+    ERROR = auto()
+
+
 class SemgrepConfidence(Enum):
     LOW = auto()
     MEDIUM = auto()
     HIGH = auto()
+
+
+class CodeqlPrecision(Enum):
+    LOW = auto()
+    MEDIUM = auto()
+    HIGH = auto()
+    VERY_HIGH = auto()
 
 
 language_extensions = {
