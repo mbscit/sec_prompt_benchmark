@@ -21,10 +21,10 @@ def compare(data_folder_path: str):
             logging.info(f"Analyzing: {data_file_path}")
             approach = utils.read_approaches_file(data_file_path)
             if (
-                not approach.semgrep_vulnerable_percentage is None
-                and not approach.semgrep_filtered_vulnerable_percentage is None
-                and not approach.codeql_vulnerable_percentage is None
-                and not approach.codeql_filtered_vulnerable_percentage is None
+                    not approach.semgrep_vulnerable_percentage is None
+                    and not approach.semgrep_filtered_vulnerable_percentage is None
+                    and not approach.codeql_vulnerable_percentage is None
+                    and not approach.codeql_filtered_vulnerable_percentage is None
             ):
                 results = {"Filename": file}
                 matrix.append(results)
@@ -34,7 +34,9 @@ def compare(data_folder_path: str):
                     f"{data_file_path} is not analyzed yet, analyze it first"
                 )
 
-    matrix.sort(key=lambda row: row["Scanners Agree Filtered Vulnerable Samples"])
+    sort_column = "Scanners Agree Filtered Vulnerable Samples"
+    matrix.sort(key=lambda row: float('inf') if row[sort_column] == "-" else float(
+        row[sort_column]))
 
     print_matrix = pd.DataFrame.from_records(
         matrix,
@@ -67,70 +69,104 @@ def analyze(approach: Approach, results):
     tasks: List[Task] = approach.tasks
 
     utils.validate_task_integrity(tasks, ["id", "samples"])
-    utils.validate_sample_integrity(tasks, ["semgrep_successfully_scanned", "codeql_successfully_scanned"])
+    if not approach.tasks or not len(approach.tasks):
+        results.update(
+            {
+                "ID": approach.id,
+                "Total Tasks": 0,
+                "Total Samples": 0,
+                "Semgrep Vulnerable Samples": "-",
+                "Codeql Vulnerable Samples": "-",
+                "Scanners Agree Vulnerable Samples": "-",
+                "Scanners Disagree Samples": "-",
+                "Semgrep Filtered Vulnerable Samples": "-",
+                "Codeql Filtered Vulnerable Samples": "-",
+                "Scanners Agree Filtered Vulnerable Samples": "-",
+                "Scanners Disagree Filtered Samples": "-",
+            })
+    else:
+        utils.validate_sample_integrity(tasks, ["semgrep_successfully_scanned", "codeql_successfully_scanned"])
 
-    results.update(
-        {
-            "ID": approach.id,
-            "Total Tasks": len(tasks),
-            "Total Samples": sum( len(task.samples) for task in tasks),
-            "Semgrep Vulnerable Samples": approach.semgrep_vulnerable_percentage,
-            "Codeql Vulnerable Samples": approach.codeql_vulnerable_percentage,
-            "Scanners Agree Vulnerable Samples": approach.scanners_agree_vulnerable_percentage,
-            "Scanners Disagree Samples": approach.scanners_disagree_percentage,
-            "Semgrep Filtered Vulnerable Samples": approach.semgrep_filtered_vulnerable_percentage,
-            "Codeql Filtered Vulnerable Samples": approach.codeql_filtered_vulnerable_percentage,
-            "Scanners Agree Filtered Vulnerable Samples": approach.scanners_agree_filtered_vulnerable_percentage,
-            "Scanners Disagree Filtered Samples": approach.scanners_disagree_filtered_percentage,
-            
-            "Min Semgrep Vulnerable Percentage": min(approach.semgrep_sample_vulnerable_percentages),
-            "Median Semgrep Vulnerable Percentage": statistics.median(approach.semgrep_sample_vulnerable_percentages),
-            "Average Semgrep Vulnerable Percentage": statistics.mean(approach.semgrep_sample_vulnerable_percentages),
-            "Max Semgrep Vulnerable Percentage": max(approach.semgrep_sample_vulnerable_percentages),
-            "Min Semgrep Filtered Percentage": min(approach.semgrep_filtered_sample_vulnerable_percentages),
-            "Median Semgrep Filtered Percentage": statistics.median(approach.semgrep_filtered_sample_vulnerable_percentages),
-            "Average Semgrep Filtered Percentage": statistics.mean(approach.semgrep_filtered_sample_vulnerable_percentages),
-            "Max Semgrep Filtered Percentage": max(approach.semgrep_filtered_sample_vulnerable_percentages),   
-            
-            "Min Codeql Vulnerable Percentage": min(approach.codeql_sample_vulnerable_percentages),
-            "Median Codeql Vulnerable Percentage": statistics.median(approach.codeql_sample_vulnerable_percentages),
-            "Average Codeql Vulnerable Percentage": statistics.mean(approach.codeql_sample_vulnerable_percentages),
-            "Max Codeql Vulnerable Percentage": max(approach.codeql_sample_vulnerable_percentages),
-            "Min Codeql Filtered Percentage": min(approach.codeql_filtered_sample_vulnerable_percentages),
-            "Median Codeql Filtered Percentage": statistics.median(approach.codeql_filtered_sample_vulnerable_percentages),
-            "Average Codeql Filtered Percentage": statistics.mean(approach.codeql_filtered_sample_vulnerable_percentages),
-            "Max Codeql Filtered Percentage": max(approach.codeql_filtered_sample_vulnerable_percentages),
-            
-            "Min Scanners Agree Vulnerable Percentage": min(approach.scanners_agree_sample_vulnerable_percentages),
-            "Median Scanners Agree Vulnerable Percentage": statistics.median(approach.scanners_agree_sample_vulnerable_percentages),
-            "Average Scanners Agree Vulnerable Percentage": statistics.mean(approach.scanners_agree_sample_vulnerable_percentages),
-            "Max Scanners Agree Vulnerable Percentage": max(approach.scanners_agree_sample_vulnerable_percentages),
-            "Min Scanners Agree Vulnerable Filtered Percentage": min(approach.scanners_agree_sample_filtered_vulnerable_percentages),
-            "Median Scanners Agree Vulnerable Filtered Percentage": statistics.median(approach.scanners_agree_sample_filtered_vulnerable_percentages),
-            "Average Scanners Agree Vulnerable Filtered Percentage": statistics.mean(approach.scanners_agree_sample_filtered_vulnerable_percentages),
-            "Max Scanners Agree Vulnerable Filtered Percentage": max(approach.scanners_agree_sample_filtered_vulnerable_percentages),
-            
-            "Min Scanners Agree Non-Vulnerable Percentage": min(approach.scanners_agree_sample_non_vulnerable_percentages),
-            "Median Scanners Agree Non-Vulnerable Percentage": statistics.median(approach.scanners_agree_sample_non_vulnerable_percentages),
-            "Average Scanners Agree Non-Vulnerable Percentage": statistics.mean(approach.scanners_agree_sample_non_vulnerable_percentages),
-            "Max Scanners Agree Non-Vulnerable Percentage": max(approach.scanners_agree_sample_non_vulnerable_percentages),
-            "Min Scanners Agree Non-Vulnerable Filtered Percentage": min(approach.scanners_agree_sample_filtered_non_vulnerable_percentages),
-            "Median Scanners Agree Non-Vulnerable Filtered Percentage": statistics.median(approach.scanners_agree_sample_filtered_non_vulnerable_percentages),
-            "Average Scanners Agree Non-Vulnerable Filtered Percentage": statistics.mean(approach.scanners_agree_sample_filtered_non_vulnerable_percentages),
-            "Max Scanners Agree Non-Vulnerable Filtered Percentage": max(approach.scanners_agree_sample_filtered_non_vulnerable_percentages),
-            
-            "Min Scanners Disagree Percentage": min(approach.scanners_disagree_sample_percentages),
-            "Median Scanners Disagree Percentage": statistics.median(approach.scanners_disagree_sample_percentages),
-            "Average Scanners Disagree Percentage": statistics.mean(approach.scanners_disagree_sample_percentages),
-            "Max Scanners Disagree Percentage": max(approach.scanners_disagree_sample_percentages),
-            "Min Scanners Disagree Filtered Percentage": min(approach.scanners_disagree_sample_filtered_percentages),
-            "Median Scanners Disagree Filtered Percentage": statistics.median(approach.scanners_disagree_sample_filtered_percentages),
-            "Average Scanners Disagree Filtered Percentage": statistics.mean(approach.scanners_disagree_sample_filtered_percentages),
-            "Max Scanners Disagree Filtered Percentage": max(approach.scanners_disagree_sample_filtered_percentages),
-            
-            
-        },
-    )
+        results.update(
+            {
+                "ID": approach.id,
+                "Total Tasks": len(tasks),
+                "Total Samples": sum(len(task.samples) for task in tasks),
+                "Semgrep Vulnerable Samples": approach.semgrep_vulnerable_percentage,
+                "Codeql Vulnerable Samples": approach.codeql_vulnerable_percentage,
+                "Scanners Agree Vulnerable Samples": approach.scanners_agree_vulnerable_percentage,
+                "Scanners Disagree Samples": approach.scanners_disagree_percentage,
+                "Semgrep Filtered Vulnerable Samples": approach.semgrep_filtered_vulnerable_percentage,
+                "Codeql Filtered Vulnerable Samples": approach.codeql_filtered_vulnerable_percentage,
+                "Scanners Agree Filtered Vulnerable Samples": approach.scanners_agree_filtered_vulnerable_percentage,
+                "Scanners Disagree Filtered Samples": approach.scanners_disagree_filtered_percentage,
+
+                "Min Semgrep Vulnerable Percentage": min(approach.semgrep_sample_vulnerable_percentages),
+                "Median Semgrep Vulnerable Percentage": statistics.median(approach.semgrep_sample_vulnerable_percentages),
+                "Average Semgrep Vulnerable Percentage": statistics.mean(approach.semgrep_sample_vulnerable_percentages),
+                "Max Semgrep Vulnerable Percentage": max(approach.semgrep_sample_vulnerable_percentages),
+                "Min Semgrep Filtered Percentage": min(approach.semgrep_filtered_sample_vulnerable_percentages),
+                "Median Semgrep Filtered Percentage": statistics.median(
+                    approach.semgrep_filtered_sample_vulnerable_percentages),
+                "Average Semgrep Filtered Percentage": statistics.mean(
+                    approach.semgrep_filtered_sample_vulnerable_percentages),
+                "Max Semgrep Filtered Percentage": max(approach.semgrep_filtered_sample_vulnerable_percentages),
+
+                "Min Codeql Vulnerable Percentage": min(approach.codeql_sample_vulnerable_percentages),
+                "Median Codeql Vulnerable Percentage": statistics.median(approach.codeql_sample_vulnerable_percentages),
+                "Average Codeql Vulnerable Percentage": statistics.mean(approach.codeql_sample_vulnerable_percentages),
+                "Max Codeql Vulnerable Percentage": max(approach.codeql_sample_vulnerable_percentages),
+                "Min Codeql Filtered Percentage": min(approach.codeql_filtered_sample_vulnerable_percentages),
+                "Median Codeql Filtered Percentage": statistics.median(
+                    approach.codeql_filtered_sample_vulnerable_percentages),
+                "Average Codeql Filtered Percentage": statistics.mean(
+                    approach.codeql_filtered_sample_vulnerable_percentages),
+                "Max Codeql Filtered Percentage": max(approach.codeql_filtered_sample_vulnerable_percentages),
+
+                "Min Scanners Agree Vulnerable Percentage": min(approach.scanners_agree_sample_vulnerable_percentages),
+                "Median Scanners Agree Vulnerable Percentage": statistics.median(
+                    approach.scanners_agree_sample_vulnerable_percentages),
+                "Average Scanners Agree Vulnerable Percentage": statistics.mean(
+                    approach.scanners_agree_sample_vulnerable_percentages),
+                "Max Scanners Agree Vulnerable Percentage": max(approach.scanners_agree_sample_vulnerable_percentages),
+                "Min Scanners Agree Vulnerable Filtered Percentage": min(
+                    approach.scanners_agree_sample_filtered_vulnerable_percentages),
+                "Median Scanners Agree Vulnerable Filtered Percentage": statistics.median(
+                    approach.scanners_agree_sample_filtered_vulnerable_percentages),
+                "Average Scanners Agree Vulnerable Filtered Percentage": statistics.mean(
+                    approach.scanners_agree_sample_filtered_vulnerable_percentages),
+                "Max Scanners Agree Vulnerable Filtered Percentage": max(
+                    approach.scanners_agree_sample_filtered_vulnerable_percentages),
+
+                "Min Scanners Agree Non-Vulnerable Percentage": min(
+                    approach.scanners_agree_sample_non_vulnerable_percentages),
+                "Median Scanners Agree Non-Vulnerable Percentage": statistics.median(
+                    approach.scanners_agree_sample_non_vulnerable_percentages),
+                "Average Scanners Agree Non-Vulnerable Percentage": statistics.mean(
+                    approach.scanners_agree_sample_non_vulnerable_percentages),
+                "Max Scanners Agree Non-Vulnerable Percentage": max(
+                    approach.scanners_agree_sample_non_vulnerable_percentages),
+                "Min Scanners Agree Non-Vulnerable Filtered Percentage": min(
+                    approach.scanners_agree_sample_filtered_non_vulnerable_percentages),
+                "Median Scanners Agree Non-Vulnerable Filtered Percentage": statistics.median(
+                    approach.scanners_agree_sample_filtered_non_vulnerable_percentages),
+                "Average Scanners Agree Non-Vulnerable Filtered Percentage": statistics.mean(
+                    approach.scanners_agree_sample_filtered_non_vulnerable_percentages),
+                "Max Scanners Agree Non-Vulnerable Filtered Percentage": max(
+                    approach.scanners_agree_sample_filtered_non_vulnerable_percentages),
+
+                "Min Scanners Disagree Percentage": min(approach.scanners_disagree_sample_percentages),
+                "Median Scanners Disagree Percentage": statistics.median(approach.scanners_disagree_sample_percentages),
+                "Average Scanners Disagree Percentage": statistics.mean(approach.scanners_disagree_sample_percentages),
+                "Max Scanners Disagree Percentage": max(approach.scanners_disagree_sample_percentages),
+                "Min Scanners Disagree Filtered Percentage": min(approach.scanners_disagree_sample_filtered_percentages),
+                "Median Scanners Disagree Filtered Percentage": statistics.median(
+                    approach.scanners_disagree_sample_filtered_percentages),
+                "Average Scanners Disagree Filtered Percentage": statistics.mean(
+                    approach.scanners_disagree_sample_filtered_percentages),
+                "Max Scanners Disagree Filtered Percentage": max(approach.scanners_disagree_sample_filtered_percentages),
+            }
+        )
 
 
 if __name__ == "__main__":
