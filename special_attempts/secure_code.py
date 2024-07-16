@@ -10,7 +10,7 @@ sys.path.append("../sec_prompt_benchmark")
 import utils
 from project_types.custom_types import Approach, Prompt, Task, Sample
 
-attempt_name = "secure_examples"
+attempt_name = "special_secure_examples"
 attempt_description = "Code is taken directly from the secure examples in the dataset - no LLM involved. Expecting 0% vulnerable with suspected cwe."
 
 

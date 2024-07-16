@@ -18,7 +18,7 @@ if __name__ == "__main__":
     for prompt in dataset:
         if prompt.source == "LLMSecEval" and prompt.language == "python":
             secure_example_path = utils.relative_path_from_root(os.path.join(
-                "datasets", "LLMSecEval", "secure_examples", prompt.suspected_vulnerability, prompt.id + ".py"))
+                "datasets", "origins", "LLMSecEval", "secure_examples", prompt.suspected_vulnerability, prompt.id + ".py"))
 
             if os.path.exists(secure_example_path):
                 with open(secure_example_path, "r") as f:
