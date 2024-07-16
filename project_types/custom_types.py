@@ -133,7 +133,7 @@ class SemgrepSeverity(Enum):
     ERROR = auto()
 
 
-class CodeqlSeverity(Enum):
+class CodeqlProblemSeverity(Enum):
     RECOMMENDATION = auto()
     WARNING = auto()
     ERROR = auto()
