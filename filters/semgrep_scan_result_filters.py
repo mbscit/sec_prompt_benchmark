@@ -82,7 +82,7 @@ def min_confidence(confidence: SemgrepConfidence) -> Callable[[Task, Sample, dic
     return _min_confidence
 
 
-def affected_line_in_generated_response(task: Task, sample: Sample, report: dict) -> bool:
+def affected_code_in_generated_response(task: Task, sample: Sample, report: dict) -> bool:
     return (
             "extra" in report
             and "lines" in report["extra"]

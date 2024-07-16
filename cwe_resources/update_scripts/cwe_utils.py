@@ -34,7 +34,3 @@ def read_cwe_xsd():
     namespaces = {'xs': m[m.find("{") + 1:m.rfind("}")]}
 
     return root, namespaces
-
-
-def convert_to_enum_identifier(text: str) -> str:
-    return text.replace(" ", "_").replace("/", "_").replace("-", "_").upper()

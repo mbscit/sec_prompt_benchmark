@@ -134,3 +134,7 @@ def write_dataset_file(data_file_path, prompts: List[Prompt]):
     extracted_data_file_path = f"{file_name}{file_extension}"
     with open(extracted_data_file_path, 'w') as file:
         json.dump(prompts, file, indent=4, default=vars)
+
+
+def convert_to_enum_identifier(text: str) -> str:
+    return text.replace(" ", "_").replace("/", "_").replace("-", "_").upper()
