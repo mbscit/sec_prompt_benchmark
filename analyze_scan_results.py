@@ -17,7 +17,7 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
     if codeql_result_filters is None:
         codeql_result_filters = []
     tasks: List[Task] = approach.tasks
-    
+
     if not tasks:
         print(f"No tasks in approach {approach.id}")
 
@@ -79,6 +79,8 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
                 sample.scanners_agree_filtered_non_vulnerable = False
                 sample.scanners_disagree = False
                 sample.scanners_filtered_disagree = False
+                sample.scanners_combined_vulnerable = False
+                sample.scanners_combined_filtered_vulnerable = False
 
                 if sample.codeql_vulnerability_found and sample.semgrep_vulnerability_found:
                     sample.scanners_agree_vulnerable = True
@@ -94,16 +96,24 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
                 else:
                     sample.scanners_filtered_disagree = True
 
+                if sample.scanners_agree_vulnerable or sample.scanners_disagree:
+                    sample.scanners_combined_vulnerable = True
+                if sample.scanners_agree_filtered_vulnerable or sample.scanners_filtered_disagree:
+                    sample.scanners_combined_filtered_vulnerable = True
+
             # count vulnerable_samples and filtered_vulnerable_samples for each task
-            task.semgrep_vulnerable_samples = len([sample for sample in task.samples if sample.semgrep_vulnerability_found])
+            task.semgrep_vulnerable_samples = len(
+                [sample for sample in task.samples if sample.semgrep_vulnerability_found])
             task.semgrep_filtered_vulnerable_samples = len(
                 [sample for sample in task.samples if sample.semgrep_filtered_vulnerability_found])
 
-            task.codeql_vulnerable_samples = len([sample for sample in task.samples if sample.codeql_vulnerability_found])
+            task.codeql_vulnerable_samples = len(
+                [sample for sample in task.samples if sample.codeql_vulnerability_found])
             task.codeql_filtered_vulnerable_samples = len(
                 [sample for sample in task.samples if sample.codeql_filtered_vulnerability_found])
 
-            task.scanners_agree_vulnerable = len([sample for sample in task.samples if sample.scanners_agree_vulnerable])
+            task.scanners_agree_vulnerable = len(
+                [sample for sample in task.samples if sample.scanners_agree_vulnerable])
             task.scanners_agree_filtered_vulnerable = len(
                 [sample for sample in task.samples if sample.scanners_agree_filtered_vulnerable])
 
@@ -116,6 +126,11 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
                 [sample for sample in task.samples if sample.scanners_disagree])
             task.scanners_filtered_disagree = len(
                 [sample for sample in task.samples if sample.scanners_filtered_disagree])
+
+            task.scanners_combined_vulnerable = len(
+                [sample for sample in task.samples if sample.scanners_combined_vulnerable])
+            task.scanners_combined_filtered_vulnerable = len(
+                [sample for sample in task.samples if sample.scanners_combined_filtered_vulnerable])
 
         total_samples = sum(len(task.samples) for task in tasks)
 
@@ -131,6 +146,8 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
         total_agree_filtered_non_vulnerable_samples = sum(task.scanners_agree_filtered_non_vulnerable for task in tasks)
         total_disagree_samples = sum(task.scanners_disagree for task in tasks)
         total_filtered_disagree_samples = sum(task.scanners_filtered_disagree for task in tasks)
+        total_combined_vulnerable_samples = sum(task.scanners_combined_vulnerable for task in tasks)
+        total_combined_filtered_vulnerable_samples = sum(task.scanners_combined_filtered_vulnerable for task in tasks)
 
         approach.semgrep_vulnerable_percentage = (
                                                          total_semgrep_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
@@ -156,6 +173,11 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
         approach.scanners_disagree_filtered_percentage = (
                                                                  total_filtered_disagree_samples / total_samples) * 100 if total_samples > 0 else 0
 
+        approach.scanners_combined_vulnerable_percentage = (
+                                                                   total_combined_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
+        approach.scanners_combined_filtered_vulnerable_percentage = (
+                                                                            total_combined_filtered_vulnerable_samples / total_samples) * 100 if total_samples > 0 else 0
+
         semgrep_sample_vulnerable_percentages = []
         semgrep_sample_filtered_vulnerable_percentages = []
 
@@ -168,13 +190,16 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
         scanners_agree_sample_filtered_non_vulnerable_percentages = []
         scanners_disagree_sample_percentages = []
         scanners_disagree_sample_filtered_percentages = []
+        scanners_combined_vulnerable_sample_percentages = []
+        scanners_combined_filtered_vulnerable_sample_percentages = []
 
         # assuming samples in all tasks have the same length
         # since validate_sample_integrity checks it
         for i in range(len(tasks[0].samples)):
             # check sample at index i for every task and save result in sample_*_percentages array
             semgrep_vulnerable_samples_at_index = [task.samples[i].semgrep_vulnerability_found for task in tasks]
-            semgrep_filtered_vulnerable_samples_at_index = [task.samples[i].semgrep_filtered_vulnerability_found for task in
+            semgrep_filtered_vulnerable_samples_at_index = [task.samples[i].semgrep_filtered_vulnerability_found for
+                                                            task in
                                                             tasks]
             vulnerable_percentage = (sum(semgrep_vulnerable_samples_at_index) / len(
                 semgrep_vulnerable_samples_at_index)) * 100 if semgrep_vulnerable_samples_at_index else 0
@@ -184,7 +209,8 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
             semgrep_sample_filtered_vulnerable_percentages.append(semgrep_filtered_vulnerable_percentage)
 
             codeql_vulnerable_samples_at_index = [task.samples[i].codeql_vulnerability_found for task in tasks]
-            codeql_filtered_vulnerable_samples_at_index = [task.samples[i].codeql_filtered_vulnerability_found for task in
+            codeql_filtered_vulnerable_samples_at_index = [task.samples[i].codeql_filtered_vulnerability_found for task
+                                                           in
                                                            tasks]
             codeql_vulnerable_percentage = (sum(codeql_vulnerable_samples_at_index) / len(
                 codeql_vulnerable_samples_at_index)) * 100 if codeql_vulnerable_samples_at_index else 0
@@ -194,13 +220,15 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
             codeql_sample_filtered_vulnerable_percentages.append(codeql_filtered_vulnerable_percentage)
 
             scanners_agree_vulnerable_samples_at_index = [task.samples[i].scanners_agree_vulnerable for task in tasks]
-            scanners_agree_filtered_vulnerable_samples_at_index = [task.samples[i].scanners_agree_filtered_vulnerable for
+            scanners_agree_filtered_vulnerable_samples_at_index = [task.samples[i].scanners_agree_filtered_vulnerable
+                                                                   for
                                                                    task in
                                                                    tasks]
             scanners_agree_vulnerable_percentage = (sum(scanners_agree_vulnerable_samples_at_index) / len(
                 scanners_agree_vulnerable_samples_at_index)) * 100 if scanners_agree_vulnerable_samples_at_index else 0
-            scanners_agree_filtered_vulnerable_percentage = (sum(scanners_agree_filtered_vulnerable_samples_at_index) / len(
-                scanners_agree_filtered_vulnerable_samples_at_index)) * 100 if scanners_agree_filtered_vulnerable_samples_at_index else 0
+            scanners_agree_filtered_vulnerable_percentage = (
+                                                                    sum(scanners_agree_filtered_vulnerable_samples_at_index) / len(
+                                                                scanners_agree_filtered_vulnerable_samples_at_index)) * 100 if scanners_agree_filtered_vulnerable_samples_at_index else 0
             scanners_agree_sample_vulnerable_percentages.append(scanners_agree_vulnerable_percentage)
             scanners_agree_sample_filtered_vulnerable_percentages.append(scanners_agree_filtered_vulnerable_percentage)
 
@@ -231,6 +259,21 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
             scanners_disagree_sample_percentages.append(scanners_disagree_sample_percentage)
             scanners_disagree_sample_filtered_percentages.append(scanners_disagree_sample_filtered_percentage)
 
+            scanners_combined_vulnerable_samples_at_index = [task.samples[i].scanners_combined_vulnerable for task in
+                                                             tasks]
+            scanners_combined_vulnerable_filtered_vulnerable_samples_at_index = [
+                task.samples[i].scanners_combined_filtered_vulnerable for
+                task in
+                tasks]
+            scanners_combined_vulnerable_sample_percentage = (sum(scanners_combined_vulnerable_samples_at_index) / len(
+                scanners_combined_vulnerable_samples_at_index)) * 100 if scanners_combined_vulnerable_samples_at_index else 0
+            scanners_combined_vulnerable_sample_filtered_percentage = (
+                                                                              sum(scanners_combined_vulnerable_filtered_vulnerable_samples_at_index) / len(
+                                                                          scanners_combined_vulnerable_filtered_vulnerable_samples_at_index)) * 100 if scanners_combined_vulnerable_filtered_vulnerable_samples_at_index else 0
+            scanners_combined_vulnerable_sample_percentages.append(scanners_combined_vulnerable_sample_percentage)
+            scanners_combined_filtered_vulnerable_sample_percentages.append(
+                scanners_combined_vulnerable_sample_filtered_percentage)
+
         approach.semgrep_sample_vulnerable_percentages = semgrep_sample_vulnerable_percentages
         approach.semgrep_filtered_sample_vulnerable_percentages = semgrep_sample_filtered_vulnerable_percentages
 
@@ -243,6 +286,8 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
         approach.scanners_agree_sample_filtered_non_vulnerable_percentages = scanners_agree_sample_filtered_non_vulnerable_percentages
         approach.scanners_disagree_sample_percentages = scanners_disagree_sample_percentages
         approach.scanners_disagree_sample_filtered_percentages = scanners_disagree_sample_filtered_percentages
+        approach.scanners_combined_vulnerable_sample_percentages = scanners_combined_vulnerable_sample_percentages
+        approach.scanners_combined_filtered_vulnerable_sample_percentages = scanners_combined_filtered_vulnerable_sample_percentages
 
         print("Summary:")
 
@@ -253,11 +298,18 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
         print(f"Semgrep Vulnerable Samples: {approach.semgrep_vulnerable_percentage:.1f}%")
         print(f"Codeql Vulnerable Samples: {approach.codeql_vulnerable_percentage:.1f}%")
         print(f"Scanners Agree Vulnerable Samples: {approach.scanners_agree_vulnerable_percentage:.1f}%")
-        print(f"Scanners Disgree Vulnerable Samples: {approach.scanners_disagree_percentage:.1f}%")
+        print(f"Scanners Disagree Vulnerable Samples: {approach.scanners_disagree_percentage:.1f}%")
+        print(f"Scanners Combined Vulnerable Samples: {approach.scanners_combined_vulnerable_percentage:.1f}%")
+        print()
         print(f"Semgrep Filtered Vulnerable Samples: {approach.semgrep_filtered_vulnerable_percentage:.1f}%")
         print(f"Codeql Filtered Vulnerable Samples: {approach.codeql_filtered_vulnerable_percentage:.1f}%")
-        print(f"Scanners Agree Filtered Vulnerable Samples: {approach.scanners_agree_filtered_vulnerable_percentage:.1f}%")
+        print(
+            f"Scanners Agree Filtered Vulnerable Samples: {approach.scanners_agree_filtered_vulnerable_percentage:.1f}%")
+        print(
+            f"Scanners Agree Filtered Vulnerable Samples: {approach.scanners_agree_filtered_vulnerable_percentage:.1f}%")
         print(f"Scanners Disagree Filtered Vulnerable Samples: {approach.scanners_disagree_filtered_percentage:.1f}%")
+        print(
+            f"Scanners Combined Filtered Vulnerable Samples: {approach.scanners_combined_filtered_vulnerable_percentage:.1f}%")
 
         print()
         print()
@@ -267,6 +319,7 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
         print(f"Codeql Min Vulnerable Percentage: {min(codeql_sample_vulnerable_percentages):.1f}%")
         print(f"Scanners Agree Min Vulnerable Percentage: {min(scanners_agree_sample_vulnerable_percentages):.1f}%")
         print(f"Scanners Disagree Min Percentage: {min(scanners_disagree_sample_percentages):.1f}%")
+        print(f"Scanners Combined Vulnerable Min Percentage: {min(scanners_combined_vulnerable_sample_percentages):.1f}%")
         print()
         print(f"Semgrep Median Vulnerable Percentage: {statistics.median(semgrep_sample_vulnerable_percentages):.1f}%")
         print(f"Codeql Median Vulnerable Percentage: {statistics.median(codeql_sample_vulnerable_percentages):.1f}%")
@@ -274,6 +327,8 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
             f"Scanners Agree Median Vulnerable Percentage: {statistics.median(scanners_agree_sample_vulnerable_percentages):.1f}%")
         print(
             f"Scanners Disagree Median Percentage: {statistics.median(scanners_disagree_sample_percentages):.1f}%")
+        print(
+            f"Scanners Combined Median Vulnerable Percentage: {statistics.median(scanners_combined_vulnerable_sample_percentages):.1f}%")
         print()
         print(f"Semgrep Average Vulnerable Percentage: {statistics.mean(semgrep_sample_vulnerable_percentages):.1f}%")
         print(f"Codeql Average Vulnerable Percentage: {statistics.mean(codeql_sample_vulnerable_percentages):.1f}%")
@@ -281,11 +336,15 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
             f"Scanners Agree Average Vulnerable Percentage: {statistics.mean(scanners_agree_sample_vulnerable_percentages):.1f}%")
         print(
             f"Scanners Disagree Average Percentage: {statistics.mean(scanners_disagree_sample_percentages):.1f}%")
+        print(
+            f"Scanners Combined Average Vulnerable Percentage: {statistics.mean(scanners_combined_vulnerable_sample_percentages):.1f}%")
         print()
         print(f"Semgrep Max Vulnerable Percentage: {max(semgrep_sample_vulnerable_percentages):.1f}%")
         print(f"Codeql Max Vulnerable Percentage: {max(codeql_sample_vulnerable_percentages):.1f}%")
         print(f"Scanners Agree Max Vulnerable Percentage: {max(scanners_agree_sample_vulnerable_percentages):.1f}%")
         print(f"Scanners Disagree Max Percentage: {max(scanners_disagree_sample_percentages):.1f}%")
+        print(
+            f"Scanners Combined Max Vulnerable Percentage: {max(scanners_combined_vulnerable_sample_percentages):.1f}%")
 
         print()
         print()
@@ -293,29 +352,41 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
         print("Filtered Percentages:")
         print(f"Semgrep Min Filtered Percentage: {min(semgrep_sample_filtered_vulnerable_percentages):.1f}%")
         print(f"Codeql Min Filtered Percentage: {min(codeql_sample_filtered_vulnerable_percentages):.1f}%")
-        print(f"Scanners Agree Vulnerable Min Filtered Percentage: {min(scanners_agree_sample_filtered_vulnerable_percentages):.1f}%")
+        print(
+            f"Scanners Agree Vulnerable Min Filtered Percentage: {min(scanners_agree_sample_filtered_vulnerable_percentages):.1f}%")
         print(f"Scanners Disagree Min Filtered Percentage: {min(scanners_disagree_sample_filtered_percentages):.1f}%")
+        print(
+            f"Scanners Combined Vulnerable Min Filtered Percentage: {min(scanners_combined_filtered_vulnerable_sample_percentages):.1f}%")
         print()
         print(
             f"Semgrep Median Filtered Percentage: {statistics.median(semgrep_sample_filtered_vulnerable_percentages):.1f}%")
-        print(f"Codeql Median Filtered Percentage: {statistics.median(codeql_sample_filtered_vulnerable_percentages):.1f}%")
+        print(
+            f"Codeql Median Filtered Percentage: {statistics.median(codeql_sample_filtered_vulnerable_percentages):.1f}%")
         print(
             f"Scanners Agree Vulnerable Median Filtered Percentage: {statistics.median(scanners_agree_sample_filtered_vulnerable_percentages):.1f}%")
         print(
             f"Scanners Disagree Median Filtered Percentage: {statistics.median(scanners_disagree_sample_filtered_percentages):.1f}%")
+        print(
+            f"Scanners Combined Vulnerable Median Filtered Percentage: {statistics.median(scanners_combined_filtered_vulnerable_sample_percentages):.1f}%")
         print()
         print(
             f"Semgrep Average Filtered Percentage: {statistics.mean(semgrep_sample_filtered_vulnerable_percentages):.1f}%")
-        print(f"Codeql Average Filtered Percentage: {statistics.mean(codeql_sample_filtered_vulnerable_percentages):.1f}%")
+        print(
+            f"Codeql Average Filtered Percentage: {statistics.mean(codeql_sample_filtered_vulnerable_percentages):.1f}%")
         print(
             f"Scanners Agree Average Vulnerable Filtered Percentage: {statistics.mean(scanners_agree_sample_filtered_vulnerable_percentages):.1f}%")
         print(
             f"Scanners Disagree Average Filtered Percentage: {statistics.mean(scanners_disagree_sample_filtered_percentages):.1f}%")
+        print(
+            f"Scanners Combined Vulnerable Average Filtered Percentage: {statistics.mean(scanners_combined_filtered_vulnerable_sample_percentages):.1f}%")
         print()
         print(f"Semgrep Max Filtered Percentage: {max(semgrep_sample_filtered_vulnerable_percentages):.1f}%")
         print(f"Codeql Max Filtered Percentage: {max(codeql_sample_filtered_vulnerable_percentages):.1f}%")
-        print(f"Scanners Agree Vulnerable Max Filtered Percentage: {max(scanners_agree_sample_filtered_vulnerable_percentages):.1f}%")
+        print(
+            f"Scanners Agree Vulnerable Max Filtered Percentage: {max(scanners_agree_sample_filtered_vulnerable_percentages):.1f}%")
         print(f"Scanners Disagree Max Filtered Percentage: {max(scanners_disagree_sample_filtered_percentages):.1f}%")
+        print(
+            f"Scanners Combined Vulnerable Max Filtered Percentage: {max(scanners_combined_filtered_vulnerable_sample_percentages):.1f}%")
 
 
 if __name__ == "__main__":

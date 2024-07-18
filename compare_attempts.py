@@ -46,10 +46,12 @@ def compare(data_folder_path: str):
             "Total Samples",
             "Scanners Agree Filtered Vulnerable Samples",
             "Scanners Disagree Filtered Samples",
+            "Scanners Combined Filtered Vulnerable Samples",
             "Semgrep Filtered Vulnerable Samples",
             "Codeql Filtered Vulnerable Samples",
             "Scanners Agree Vulnerable Samples",
             "Scanners Disagree Samples",
+            "Scanners Combined Vulnerable Samples",
             "Semgrep Vulnerable Samples",
             "Codeql Vulnerable Samples",
 
@@ -78,11 +80,14 @@ def analyze(approach: Approach, results):
                 "Semgrep Vulnerable Samples": "-",
                 "Codeql Vulnerable Samples": "-",
                 "Scanners Agree Vulnerable Samples": "-",
-                "Scanners Disagree Samples": "-",
+                "Scanners Disagree Samples": "-",                
+                "Scanners Combined Vulnerable Samples": "-",
                 "Semgrep Filtered Vulnerable Samples": "-",
                 "Codeql Filtered Vulnerable Samples": "-",
                 "Scanners Agree Filtered Vulnerable Samples": "-",
-                "Scanners Disagree Filtered Samples": "-",
+                "Scanners Disagree Filtered Samples": "-",                
+                "Scanners Combined Filtered Vulnerable Samples": "-",
+
             })
     else:
         utils.validate_sample_integrity(tasks, ["semgrep_successfully_scanned", "codeql_successfully_scanned"])
@@ -100,6 +105,7 @@ def analyze(approach: Approach, results):
                 "Codeql Filtered Vulnerable Samples": approach.codeql_filtered_vulnerable_percentage,
                 "Scanners Agree Filtered Vulnerable Samples": approach.scanners_agree_filtered_vulnerable_percentage,
                 "Scanners Disagree Filtered Samples": approach.scanners_disagree_filtered_percentage,
+                "Scanners Combined Filtered Vulnerable Samples": approach.scanners_combined_filtered_vulnerable_percentage,
 
                 "Min Semgrep Vulnerable Percentage": min(approach.semgrep_sample_vulnerable_percentages),
                 "Median Semgrep Vulnerable Percentage": statistics.median(approach.semgrep_sample_vulnerable_percentages),
@@ -165,6 +171,17 @@ def analyze(approach: Approach, results):
                 "Average Scanners Disagree Filtered Percentage": statistics.mean(
                     approach.scanners_disagree_sample_filtered_percentages),
                 "Max Scanners Disagree Filtered Percentage": max(approach.scanners_disagree_sample_filtered_percentages),
+                
+                "Min Scanners Combined Vulnerable Percentage": min(approach.scanners_combined_vulnerable_sample_percentages),
+                "Median Scanners Combined Vulnerable Percentage": statistics.median(approach.scanners_combined_vulnerable_sample_percentages),
+                "Average Scanners Combined Vulnerable Percentage": statistics.mean(approach.scanners_combined_vulnerable_sample_percentages),
+                "Max Scanners Combined Vulnerable Percentage": max(approach.scanners_combined_vulnerable_sample_percentages),
+                "Min Scanners Combined Vulnerable Filtered Percentage": min(approach.scanners_combined_filtered_vulnerable_sample_percentages),
+                "Median Scanners Combined Vulnerable Filtered Percentage": statistics.median(
+                    approach.scanners_combined_filtered_vulnerable_sample_percentages),
+                "Average Scanners Combined Vulnerable Filtered Percentage": statistics.mean(
+                    approach.scanners_combined_filtered_vulnerable_sample_percentages),
+                "Max Scanners Combined Vulnerable Filtered Percentage": max(approach.scanners_combined_filtered_vulnerable_sample_percentages),
             }
         )
 

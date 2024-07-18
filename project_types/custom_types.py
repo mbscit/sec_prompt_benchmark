@@ -42,6 +42,8 @@ class Sample(BaseModel):
     scanners_agree_filtered_non_vulnerable: Optional[bool] = None
     scanners_disagree: Optional[bool] = None
     scanners_filtered_disagree: Optional[bool] = None
+    scanners_combined_vulnerable: Optional[bool] = None # true if one or both scanners found a vulnerability
+    scanners_combined_filtered_vulnerable: Optional[bool] = None # true if one or both scanners found a vulnerability (after filtering)
 
 
 class Task(BaseModel):
@@ -59,10 +61,12 @@ class Task(BaseModel):
 
     scanners_agree_vulnerable: Optional[int] = None
     scanners_agree_filtered_vulnerable: Optional[int] = None
-    scanners_agree_non_vulnerable: Optional[int] = None
     scanners_agree_filtered_non_vulnerable: Optional[int] = None
     scanners_disagree: Optional[int] = None
     scanners_filtered_disagree: Optional[int] = None
+    scanners_agree_non_vulnerable: Optional[int] = None
+    scanners_combined_vulnerable: Optional[int] = None
+    scanners_combined_filtered_vulnerable: Optional[int] = None
 
     samples: Optional[List[Sample]] = []
 
@@ -89,13 +93,17 @@ class Approach(BaseModel):
     scanners_agree_filtered_non_vulnerable_percentage: Optional[float] = None
     scanners_disagree_percentage: Optional[float] = None
     scanners_disagree_filtered_percentage: Optional[float] = None
+    scanners_combined_vulnerable_percentage: Optional[float] = None
+    scanners_combined_filtered_vulnerable_percentage: Optional[float] = None
 
     scanners_agree_sample_vulnerable_percentages: Optional[List[float]] = None
     scanners_agree_sample_filtered_vulnerable_percentages: Optional[List[float]] = None
-    scanners_agree_sample_non_vulnerable_percentages: Optional[List[float]] = None
-    scanners_agree_sample_filtered_non_vulnerable_percentages: Optional[List[float]] = None
     scanners_disagree_sample_percentages: Optional[List[float]] = None
     scanners_disagree_sample_filtered_percentages: Optional[List[float]] = None
+    scanners_agree_sample_non_vulnerable_percentages: Optional[List[float]] = None
+    scanners_agree_sample_filtered_non_vulnerable_percentages: Optional[List[float]] = None
+    scanners_combined_vulnerable_sample_percentages: Optional[List[float]] = None
+    scanners_combined_filtered_vulnerable_sample_percentages: Optional[List[float]] = None
 
     tasks: List[Task]
 
