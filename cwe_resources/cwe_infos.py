@@ -1,6 +1,10 @@
 import json
 import sys
+from typing import List, Dict
 
+from cwe_resources.structures.enum.detection_effectiveness import DetectionEffectivenessEnumeration
+from cwe_resources.structures.enum.detection_information import DetectionInformation
+from cwe_resources.structures.enum.detection_method import DetectionMethodEnumeration
 from cwe_resources.structures.enum.usage import UsageEnumeration
 
 sys.path.append("../sec_prompt_benchmark")
@@ -11,10 +15,11 @@ import utils
 cwe_hierarchy_data = None
 cwe_mapping_suggestions_data = None
 cwe_mapping_usage_data = None
+cwe_detection_method_data: Dict[str, List[DetectionInformation]] = {}
 
 
 def load_data():
-    global cwe_hierarchy_data, cwe_mapping_suggestions_data, cwe_mapping_usage_data
+    global cwe_hierarchy_data, cwe_mapping_suggestions_data, cwe_mapping_usage_data, cwe_detection_method_data
     cwe_hierarchy_file_path = utils.relative_path_from_root('cwe_resources/structures/json/cwe_hierarchy.json')
     with open(cwe_hierarchy_file_path, 'r') as file:
         cwe_hierarchy_data = json.load(file)
@@ -28,6 +33,20 @@ def load_data():
         'cwe_resources/structures/json/cwe_mapping_usage.json')
     with open(cwe_mapping_usage_file_path, 'r') as file:
         cwe_mapping_usage_data = json.load(file)
+
+    cwe_detection_method_file_path = utils.relative_path_from_root(
+        'cwe_resources/structures/json/cwe_detection_method.json')
+    with open(cwe_detection_method_file_path, 'r') as file:
+        json_data = json.load(file)
+
+        for key, entries in json_data.items():
+            detection_info_list = []
+            for entry in entries:
+                method = DetectionMethodEnumeration[utils.convert_to_enum_identifier(entry["Method"])]
+                effectiveness = DetectionEffectivenessEnumeration[
+                    utils.convert_to_enum_identifier(entry["Effectiveness"])] if "Effectiveness" in entry else None
+                detection_info_list.append(DetectionInformation(method, effectiveness))
+            cwe_detection_method_data[key] = detection_info_list
 
 
 load_data()
@@ -82,7 +101,7 @@ def get_related(id):
     return ancestors, peers, descendants
 
 
-def get_suggested_mappings(id):
+def get_suggested_mappings(id) -> List[str]:
     id = id.replace("CWE-", "")
     data = cwe_mapping_suggestions_data
 
@@ -92,8 +111,16 @@ def get_suggested_mappings(id):
         return []
 
 
-def get_mapping_level(id):
+def get_mapping_level(id) -> UsageEnumeration:
     id = id.replace("CWE-", "")
     data = cwe_mapping_usage_data
 
     return UsageEnumeration[data[id]]
+
+
+def get_detection_methods(id) -> List[DetectionInformation]:
+    id = id.replace("CWE-", "")
+    data: Dict[str, List[DetectionInformation]] = cwe_detection_method_data
+    detection_methods = data.get(id, [])
+
+    return detection_methods

@@ -36,7 +36,7 @@ def build_detection_method_dict():
 
 
 def create_detection_methods_structure():
-    detection_method_dict = utils.relative_path_from_root('cwe_resources/structures/json/detection_method.json')
+    detection_method_dict = utils.relative_path_from_root('cwe_resources/structures/json/cwe_detection_method.json')
 
     detections_dict = build_detection_method_dict()
 
