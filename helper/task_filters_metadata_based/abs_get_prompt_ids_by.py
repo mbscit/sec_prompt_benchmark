@@ -26,3 +26,11 @@ class GetIDsBy(ABC):
         load_dotenv()
         dataset = utils.read_dataset_file(utils.relative_path_from_root(os.getenv("DATASET_FILE_PATH")))
         return self.filtered(dataset, print_ids)
+
+    def filtered_from_ids(self, ids: list[str], print_ids=False) -> list[str]:
+        load_dotenv()
+        dataset = utils.read_dataset_file(utils.relative_path_from_root(os.getenv("DATASET_FILE_PATH")))
+        dataset = [prompt for prompt in dataset if prompt.id in ids]
+        if len(set(ids)) < len(dataset):
+            logging.warning(f"IDs not found in the dataset: {set(ids) - set([prompt.id for prompt in dataset])}")
+        return self.filtered(dataset, print_ids)
