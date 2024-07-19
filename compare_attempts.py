@@ -101,6 +101,7 @@ def analyze(approach: Approach, results):
                 "Codeql Vulnerable Samples": approach.codeql_vulnerable_percentage,
                 "Scanners Agree Vulnerable Samples": approach.scanners_agree_vulnerable_percentage,
                 "Scanners Disagree Samples": approach.scanners_disagree_percentage,
+                "Scanners Combined Vulnerable Samples": approach.scanners_combined_vulnerable_percentage,
                 "Semgrep Filtered Vulnerable Samples": approach.semgrep_filtered_vulnerable_percentage,
                 "Codeql Filtered Vulnerable Samples": approach.codeql_filtered_vulnerable_percentage,
                 "Scanners Agree Filtered Vulnerable Samples": approach.scanners_agree_filtered_vulnerable_percentage,
