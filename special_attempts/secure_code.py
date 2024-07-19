@@ -23,7 +23,7 @@ def create_approach(dataset: List[Prompt]) -> Approach:
             id=prompt.id,
             original_prompt=prompt.prompt,
             modified_prompt="Hardcoded response:" + prompt.secure_example,
-            suspected_vulnerability=re.sub(r'CWE-0+', 'CWE-', prompt.suspected_vulnerability),
+            suspected_vulnerabilities=[re.sub(r'CWE-0+', 'CWE-', prompt.suspected_vulnerability)],
             language=prompt.language,
         )
 

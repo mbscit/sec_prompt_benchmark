@@ -109,7 +109,7 @@ class CodeQLScanner:
         # take the length of the first samples array for reference
         num_samples = len(tasks[0].samples)
 
-        utils.validate_task_integrity(tasks, ["id", "suspected_vulnerability"])
+        utils.validate_task_integrity(tasks, ["id", "suspected_vulnerabilities"])
         utils.validate_sample_integrity(tasks, ["extracted_code"], num_samples)
 
         if not any(sample for task in tasks for sample in task.samples if not sample.codeql_successfully_scanned):

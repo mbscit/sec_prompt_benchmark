@@ -50,7 +50,7 @@ class Task(BaseModel):
     id: str
     original_prompt: str
     modified_prompt: Optional[str] = None
-    suspected_vulnerability: str
+    suspected_vulnerabilities: List[str] | str
     language: str
 
     semgrep_vulnerable_samples: Optional[int] = None

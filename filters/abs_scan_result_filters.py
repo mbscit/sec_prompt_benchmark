@@ -25,22 +25,24 @@ class AbsScanResultFilters:
 
     @classmethod
     def only_suspected_cwe(cls, task: Task, sample: Sample, report: dict) -> bool:
-        return task.suspected_vulnerability in cls.get_detected_cwes(report)
+        return any(suspected_vulnerability for suspected_vulnerability in task.suspected_vulnerabilities if suspected_vulnerability in cls.get_detected_cwes(report))
 
     @classmethod
     def cwe_relatives_of_suspected(cls, allow_ancestors=True, allow_peers=True, allow_descendants=True) -> Callable[
         [Task, Sample, dict], bool]:
         def _cwe_relatives_of_suspected(task: Task, sample: Sample, report: dict) -> bool:
-            suspected_vulnerability_id = task.suspected_vulnerability.replace("CWE-", "")
+            suspected_vulnerability_ids = [suspected_vulnerability.replace("CWE-", "") for suspected_vulnerability in task.suspected_vulnerabilities]
 
-            ancestors, peers, descendants = cwe_infos.get_related(suspected_vulnerability_id)
-            allowed_cwes = [suspected_vulnerability_id]
-            if allow_ancestors:
-                allowed_cwes += ancestors
-            if allow_peers:
-                allowed_cwes += peers
-            if allow_descendants:
-                allowed_cwes += descendants
+            allowed_cwes = []
+            for suspected_vulnerability_id in suspected_vulnerability_ids:
+                ancestors, peers, descendants = cwe_infos.get_related(suspected_vulnerability_id)
+                allowed_cwes += [suspected_vulnerability_id]
+                if allow_ancestors:
+                    allowed_cwes += ancestors
+                if allow_peers:
+                    allowed_cwes += peers
+                if allow_descendants:
+                    allowed_cwes += descendants
 
             allowed_cwes = [f"CWE-{allowed_cwe}" for allowed_cwe in allowed_cwes]
             return cls.only_allow_cwes(report, allowed_cwes)
@@ -49,11 +51,15 @@ class AbsScanResultFilters:
 
     @classmethod
     def cwe_in_recommended_mapping(cls, task: Task, sample: Sample, report: dict) -> bool:
-        suspected_vulnerability_id = task.suspected_vulnerability.replace("CWE-", "")
+        suspected_vulnerability_ids = [suspected_vulnerability.replace("CWE-", "") for suspected_vulnerability in
+                                       task.suspected_vulnerabilities]
 
-        suggested_mappings = cwe_infos.get_suggested_mappings(suspected_vulnerability_id)
-        allowed_cwes = suggested_mappings + [suspected_vulnerability_id]
+        allowed_cwes: List[str] = []
+        for suspected_vulnerability_id in suspected_vulnerability_ids:
+            suggested_mappings = cwe_infos.get_suggested_mappings(suspected_vulnerability_id)
+            allowed_cwes += suggested_mappings + [suspected_vulnerability_id]
         allowed_cwes = [f"CWE-{allowed_cwe}" for allowed_cwe in allowed_cwes]
+        allowed_cwes = list(set(allowed_cwes))
         return cls.only_allow_cwes(report, allowed_cwes)
 
     @classmethod

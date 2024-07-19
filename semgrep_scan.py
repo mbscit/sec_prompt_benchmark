@@ -82,7 +82,7 @@ class SemgrepScanner:
             self.scan_one(approach, sample_index)
         else:
             tasks = approach.tasks
-            utils.validate_task_integrity(tasks, ["id", "suspected_vulnerability"])
+            utils.validate_task_integrity(tasks, ["id", "suspected_vulnerabilities"])
             utils.validate_sample_integrity(tasks, ["extracted_code"])
 
             indexes_to_consider = []
@@ -128,7 +128,7 @@ class SemgrepScanner:
 
         tasks = approach.tasks
 
-        utils.validate_task_integrity(tasks, ["id", "suspected_vulnerability"])
+        utils.validate_task_integrity(tasks, ["id", "suspected_vulnerabilities"])
         utils.validate_sample_integrity(tasks, ["extracted_code"], sample_index + 1)
 
         if all(sample.semgrep_successfully_scanned for task in tasks for sample in task.samples if

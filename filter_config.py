@@ -12,7 +12,7 @@ SEMGREP_SCAN_RESULT_FILTERS: List[Callable[[Task, Sample, dict], bool]] = [
     # SemgrepScanResultFilters.cwe_relatives_of_suspected(allow_ancestors=False, allow_peers=False, allow_descendants=True),
     # SemgrepScanResultFilters.cwe_in_recommended_mapping,
     # SemgrepScanResultFilters.affected_code_in_generated_response,
-    # SemgrepScanResultFilters.only_suspected_cwe,
+    SemgrepScanResultFilters.only_suspected_cwe,
 ]
 
 CODEQL_SCAN_RESULT_FILTERS: List[Callable[[Task, Sample, dict], bool]] = [
@@ -23,5 +23,5 @@ CODEQL_SCAN_RESULT_FILTERS: List[Callable[[Task, Sample, dict], bool]] = [
     # CodeqlScanResultFilters.cwe_relatives_of_suspected(allow_ancestors=False, allow_peers=False, allow_descendants=True)
     # CodeqlScanResultFilters.cwe_in_recommended_mapping,
     # codeql_scan_result_filters.affected_code_in_generated_response,
-    # CodeqlScanResultFilters.only_suspected_cwe,
+    CodeqlScanResultFilters.only_suspected_cwe,
 ]
