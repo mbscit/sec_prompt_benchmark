@@ -30,11 +30,11 @@ class Sample(BaseModel):
     semgrep_vulnerability_found: Optional[bool] = None
     semgrep_filtered_vulnerability_found: Optional[bool] = None
 
-    codeql_successfully_scanned: Optional[bool] = None
-    codeql_scanner_report: Optional[List[dict]] = None
-    codeql_filtered_scanner_report: Optional[List[dict]] = None
-    codeql_vulnerability_found: Optional[bool] = None
-    codeql_filtered_vulnerability_found: Optional[bool] = None
+    bandit_successfully_scanned: Optional[bool] = None
+    bandit_scanner_report: Optional[List[dict]] = None
+    bandit_filtered_scanner_report: Optional[List[dict]] = None
+    bandit_vulnerability_found: Optional[bool] = None
+    bandit_filtered_vulnerability_found: Optional[bool] = None
 
     scanners_agree_vulnerable: Optional[bool] = None
     scanners_agree_filtered_vulnerable: Optional[bool] = None
@@ -56,8 +56,8 @@ class Task(BaseModel):
     semgrep_vulnerable_samples: Optional[int] = None
     semgrep_filtered_vulnerable_samples: Optional[int] = None
 
-    codeql_vulnerable_samples: Optional[int] = None
-    codeql_filtered_vulnerable_samples: Optional[int] = None
+    bandit_vulnerable_samples: Optional[int] = None
+    bandit_filtered_vulnerable_samples: Optional[int] = None
 
     scanners_agree_vulnerable: Optional[int] = None
     scanners_agree_filtered_vulnerable: Optional[int] = None
@@ -82,10 +82,10 @@ class Approach(BaseModel):
     semgrep_sample_vulnerable_percentages: Optional[List[float]] = None
     semgrep_filtered_sample_vulnerable_percentages: Optional[List[float]] = None
 
-    codeql_vulnerable_percentage: Optional[float] = None
-    codeql_filtered_vulnerable_percentage: Optional[float] = None
-    codeql_sample_vulnerable_percentages: Optional[List[float]] = None
-    codeql_filtered_sample_vulnerable_percentages: Optional[List[float]] = None
+    bandit_vulnerable_percentage: Optional[float] = None
+    bandit_filtered_vulnerable_percentage: Optional[float] = None
+    bandit_sample_vulnerable_percentages: Optional[List[float]] = None
+    bandit_filtered_sample_vulnerable_percentages: Optional[List[float]] = None
 
     scanners_agree_vulnerable_percentage: Optional[float] = None
     scanners_agree_filtered_vulnerable_percentage: Optional[float] = None
@@ -141,7 +141,7 @@ class SemgrepSeverity(Enum):
     ERROR = auto()
 
 
-class CodeqlProblemSeverity(Enum):
+class BanditProblemSeverity(Enum):
     RECOMMENDATION = auto()
     WARNING = auto()
     ERROR = auto()
@@ -153,7 +153,7 @@ class SemgrepConfidence(Enum):
     HIGH = auto()
 
 
-class CodeqlPrecision(Enum):
+class BanditPrecision(Enum):
     LOW = auto()
     MEDIUM = auto()
     HIGH = auto()

@@ -23,8 +23,8 @@ def compare(data_folder_path: str):
             if (
                     not approach.semgrep_vulnerable_percentage is None
                     and not approach.semgrep_filtered_vulnerable_percentage is None
-                    and not approach.codeql_vulnerable_percentage is None
-                    and not approach.codeql_filtered_vulnerable_percentage is None
+                    and not approach.bandit_vulnerable_percentage is None
+                    and not approach.bandit_filtered_vulnerable_percentage is None
             ):
                 results = {"Filename": file}
                 matrix.append(results)
@@ -48,12 +48,12 @@ def compare(data_folder_path: str):
             "Scanners Disagree Filtered Samples",
             "Scanners Combined Filtered Vulnerable Samples",
             "Semgrep Filtered Vulnerable Samples",
-            "Codeql Filtered Vulnerable Samples",
+            "Bandit Filtered Vulnerable Samples",
             "Scanners Agree Vulnerable Samples",
             "Scanners Disagree Samples",
             "Scanners Combined Vulnerable Samples",
             "Semgrep Vulnerable Samples",
-            "Codeql Vulnerable Samples",
+            "Bandit Vulnerable Samples",
 
         ],
     ).to_string(index=False, header=True)
@@ -78,19 +78,19 @@ def analyze(approach: Approach, results):
                 "Total Tasks": 0,
                 "Total Samples": 0,
                 "Semgrep Vulnerable Samples": "-",
-                "Codeql Vulnerable Samples": "-",
+                "Bandit Vulnerable Samples": "-",
                 "Scanners Agree Vulnerable Samples": "-",
                 "Scanners Disagree Samples": "-",                
                 "Scanners Combined Vulnerable Samples": "-",
                 "Semgrep Filtered Vulnerable Samples": "-",
-                "Codeql Filtered Vulnerable Samples": "-",
+                "Bandit Filtered Vulnerable Samples": "-",
                 "Scanners Agree Filtered Vulnerable Samples": "-",
                 "Scanners Disagree Filtered Samples": "-",                
                 "Scanners Combined Filtered Vulnerable Samples": "-",
 
             })
     else:
-        utils.validate_sample_integrity(tasks, ["semgrep_successfully_scanned", "codeql_successfully_scanned"])
+        utils.validate_sample_integrity(tasks, ["semgrep_successfully_scanned", "bandit_successfully_scanned"])
 
         results.update(
             {
@@ -98,12 +98,12 @@ def analyze(approach: Approach, results):
                 "Total Tasks": len(tasks),
                 "Total Samples": sum(len(task.samples) for task in tasks),
                 "Semgrep Vulnerable Samples": approach.semgrep_vulnerable_percentage,
-                "Codeql Vulnerable Samples": approach.codeql_vulnerable_percentage,
+                "Bandit Vulnerable Samples": approach.bandit_vulnerable_percentage,
                 "Scanners Agree Vulnerable Samples": approach.scanners_agree_vulnerable_percentage,
                 "Scanners Disagree Samples": approach.scanners_disagree_percentage,
                 "Scanners Combined Vulnerable Samples": approach.scanners_combined_vulnerable_percentage,
                 "Semgrep Filtered Vulnerable Samples": approach.semgrep_filtered_vulnerable_percentage,
-                "Codeql Filtered Vulnerable Samples": approach.codeql_filtered_vulnerable_percentage,
+                "Bandit Filtered Vulnerable Samples": approach.bandit_filtered_vulnerable_percentage,
                 "Scanners Agree Filtered Vulnerable Samples": approach.scanners_agree_filtered_vulnerable_percentage,
                 "Scanners Disagree Filtered Samples": approach.scanners_disagree_filtered_percentage,
                 "Scanners Combined Filtered Vulnerable Samples": approach.scanners_combined_filtered_vulnerable_percentage,
@@ -119,16 +119,16 @@ def analyze(approach: Approach, results):
                     approach.semgrep_filtered_sample_vulnerable_percentages),
                 "Max Semgrep Filtered Percentage": max(approach.semgrep_filtered_sample_vulnerable_percentages),
 
-                "Min Codeql Vulnerable Percentage": min(approach.codeql_sample_vulnerable_percentages),
-                "Median Codeql Vulnerable Percentage": statistics.median(approach.codeql_sample_vulnerable_percentages),
-                "Average Codeql Vulnerable Percentage": statistics.mean(approach.codeql_sample_vulnerable_percentages),
-                "Max Codeql Vulnerable Percentage": max(approach.codeql_sample_vulnerable_percentages),
-                "Min Codeql Filtered Percentage": min(approach.codeql_filtered_sample_vulnerable_percentages),
-                "Median Codeql Filtered Percentage": statistics.median(
-                    approach.codeql_filtered_sample_vulnerable_percentages),
-                "Average Codeql Filtered Percentage": statistics.mean(
-                    approach.codeql_filtered_sample_vulnerable_percentages),
-                "Max Codeql Filtered Percentage": max(approach.codeql_filtered_sample_vulnerable_percentages),
+                "Min Bandit Vulnerable Percentage": min(approach.bandit_sample_vulnerable_percentages),
+                "Median Bandit Vulnerable Percentage": statistics.median(approach.bandit_sample_vulnerable_percentages),
+                "Average Bandit Vulnerable Percentage": statistics.mean(approach.bandit_sample_vulnerable_percentages),
+                "Max Bandit Vulnerable Percentage": max(approach.bandit_sample_vulnerable_percentages),
+                "Min Bandit Filtered Percentage": min(approach.bandit_filtered_sample_vulnerable_percentages),
+                "Median Bandit Filtered Percentage": statistics.median(
+                    approach.bandit_filtered_sample_vulnerable_percentages),
+                "Average Bandit Filtered Percentage": statistics.mean(
+                    approach.bandit_filtered_sample_vulnerable_percentages),
+                "Max Bandit Filtered Percentage": max(approach.bandit_filtered_sample_vulnerable_percentages),
 
                 "Min Scanners Agree Vulnerable Percentage": min(approach.scanners_agree_sample_vulnerable_percentages),
                 "Median Scanners Agree Vulnerable Percentage": statistics.median(

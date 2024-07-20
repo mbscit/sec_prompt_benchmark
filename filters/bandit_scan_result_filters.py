@@ -5,10 +5,10 @@ from typing import Callable, List
 
 import utils
 from filters.abs_scan_result_filters import AbsScanResultFilters
-from project_types.custom_types import Sample, Task, CodeqlPrecision, CodeqlProblemSeverity
+from project_types.custom_types import Sample, Task, BanditPrecision, BanditProblemSeverity
 
 
-class CodeqlScanResultFilters(AbsScanResultFilters):
+class BanditScanResultFilters(AbsScanResultFilters):
 
     @staticmethod
     def get_detected_cwes(report: dict) -> List[str]:
@@ -35,10 +35,10 @@ class CodeqlScanResultFilters(AbsScanResultFilters):
         return extracted_string
 
     @staticmethod
-    def min_problem_severity(severity: CodeqlProblemSeverity) -> Callable[[Task, Sample, dict], bool]:
+    def min_problem_severity(severity: BanditProblemSeverity) -> Callable[[Task, Sample, dict], bool]:
         def _min_problem_severity(task: Task, sample: Sample, report: dict):
             actual_problem_severity = report['rule']['properties']['problem.severity']
-            actual_severity_enum = CodeqlProblemSeverity[utils.convert_to_enum_identifier(actual_problem_severity)]
+            actual_severity_enum = BanditProblemSeverity[utils.convert_to_enum_identifier(actual_problem_severity)]
             return actual_severity_enum.value >= severity.value
 
         return _min_problem_severity
@@ -56,10 +56,10 @@ class CodeqlScanResultFilters(AbsScanResultFilters):
         return _min_problem_severity
 
     @staticmethod
-    def min_precision(precision: CodeqlPrecision) -> Callable[[Task, Sample, dict], bool]:
+    def min_precision(precision: BanditPrecision) -> Callable[[Task, Sample, dict], bool]:
         def _min_precision(task: Task, sample: Sample, report: dict):
             actual_precision = report['rule']['properties']['precision']
-            actual_precision_enum = CodeqlPrecision[utils.convert_to_enum_identifier(actual_precision)]
+            actual_precision_enum = BanditPrecision[utils.convert_to_enum_identifier(actual_precision)]
             return actual_precision_enum.value >= precision.value
 
         return _min_precision
@@ -68,7 +68,7 @@ class CodeqlScanResultFilters(AbsScanResultFilters):
     def affected_code_in_generated_response(task: Task, sample: Sample, report: dict) -> bool:
         locations = report['locations']
         for location in locations:
-            affected_code = CodeqlScanResultFilters.extract_region(sample.extracted_code,
+            affected_code = BanditScanResultFilters.extract_region(sample.extracted_code,
                                                                    location['physicalLocation']['region'])
             if affected_code in sample.generated_response:
                 return True

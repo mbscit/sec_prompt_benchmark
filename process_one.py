@@ -9,9 +9,9 @@ from dotenv import load_dotenv
 
 import analyze_scan_results
 import utils
-from codeql_scan import CodeQLScanner
+from bandit_scan import BanditScanner
 from extract_code_from_generated_response import CodeExtractor
-from filter_config import SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS
+from filter_config import SEMGREP_SCAN_RESULT_FILTERS, BANDIT_SCAN_RESULT_FILTERS
 from generate_response_from_modified_prompts import ResponseGenerator
 from project_types.custom_types import Approach, Task, Sample
 from semgrep_scan import SemgrepScanner
@@ -37,9 +37,9 @@ def re_extract(relevant_scan_errors, num_regenerations, approach, i):
         sample.semgrep_scanner_report = None
         sample.semgrep_filtered_scanner_report = None
 
-        sample.codeql_successfully_scanned = False
-        sample.codeql_scanner_report = None
-        sample.codeql_filtered_scanner_report = None
+        sample.bandit_successfully_scanned = False
+        sample.bandit_scanner_report = None
+        sample.bandit_filtered_scanner_report = None
 
         if re_generate:
             sample.generated_response = None
@@ -84,7 +84,7 @@ def save_if_changed(file_path, approach, previous_approach_dict):
 
 
 def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sample, dict], bool]] = None,
-                 codeql_result_filters: List[Callable[[Task, Sample, dict], bool]] = None):
+                 bandit_result_filters: List[Callable[[Task, Sample, dict], bool]] = None):
     load_dotenv()
     samples_per_task = int(os.getenv('SAMPLES_PER_TASK'))
 
@@ -142,11 +142,11 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
         semgrep_scanner.scan_samples(approach)
         previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
-    print(f"Starting codeql scan")
+    print(f"Starting bandit scan")
     st = time.time()
 
-    codeql_scanner = CodeQLScanner()
-    codeql_scanner.scan_samples(approach)
+    bandit_scanner = BanditScanner()
+    bandit_scanner.scan_samples(approach)
 
     previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
     et = time.time()
@@ -174,8 +174,8 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
 
             semgrep_scanner = SemgrepScanner()
             semgrep_scanner.scan_samples(approach)
-            codeql_scanner = CodeQLScanner()
-            codeql_scanner.scan_samples(approach)
+            bandit_scanner = BanditScanner()
+            bandit_scanner.scan_samples(approach)
             previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
     relevant_scan_errors = get_relevant_scan_errors(approach)
@@ -187,7 +187,7 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
 
     previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
-    analyze_scan_results.analyze(approach, semgrep_result_filters, codeql_result_filters)
+    analyze_scan_results.analyze(approach, semgrep_result_filters, bandit_result_filters)
     previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
 
@@ -203,13 +203,13 @@ def get_relevant_scan_errors(approach, i=-1):
                             error.error.startswith("Syntax error at")
                             or error.error.startswith("Lexical error at")]
 
-    if approach.errors and "codeql_scan" in approach.errors:
-        codeql_scan_errors = [error for error in approach.errors["codeql_scan"]]
+    if approach.errors and "bandit_scan" in approach.errors:
+        bandit_scan_errors = [error for error in approach.errors["bandit_scan"]]
         if i > -1:
-            codeql_scan_errors = [error for error in codeql_scan_errors if error.sample_index == i]
+            bandit_scan_errors = [error for error in bandit_scan_errors if error.sample_index == i]
     else:
-        codeql_scan_errors = []
-    relevant_scan_errors += [error for error in codeql_scan_errors if
+        bandit_scan_errors = []
+    relevant_scan_errors += [error for error in bandit_scan_errors if
                              error.error.startswith("Extraction failed in")]
 
     return relevant_scan_errors
@@ -218,7 +218,7 @@ def get_relevant_scan_errors(approach, i=-1):
 def main():
     load_dotenv()
     data_file_path = utils.relative_path_from_root(os.getenv('DATA_FILE_PATH'))
-    process_file(data_file_path, SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
+    process_file(data_file_path, SEMGREP_SCAN_RESULT_FILTERS, BANDIT_SCAN_RESULT_FILTERS)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ import sys
 
 from dotenv import load_dotenv
 
-from filters.codeql_scan_result_filters import CodeqlScanResultFilters
+from filters.bandit_scan_result_filters import BanditScanResultFilters
 
 sys.path.append("../sec_prompt_benchmark")
 
@@ -26,10 +26,10 @@ for file in os.listdir(data_folder_path):
         for task in approach.tasks:
             for sample in task.samples:
                 # remove task if no vulnerability is found / task is not vulnerable
-                if len(sample.codeql_scanner_report) > 0:
-                    for report in sample.codeql_scanner_report:
+                if len(sample.bandit_scanner_report) > 0:
+                    for report in sample.bandit_scanner_report:
 
-                        detected_cwes = CodeqlScanResultFilters.get_detected_cwes(report)
+                        detected_cwes = BanditScanResultFilters.get_detected_cwes(report)
                         for detected_cwe in detected_cwes:
                             if detected_cwe not in reports:
                                 reports[detected_cwe] = report
