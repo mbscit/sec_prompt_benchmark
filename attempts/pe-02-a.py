@@ -5,6 +5,8 @@ from typing import List
 
 from dotenv import load_dotenv
 
+from cwe_resources.cwe_infos import get_suggested_mappings
+
 sys.path.append("../sec_prompt_benchmark")
 
 import utils
