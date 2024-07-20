@@ -42,8 +42,9 @@ class Sample(BaseModel):
     scanners_agree_filtered_non_vulnerable: Optional[bool] = None
     scanners_disagree: Optional[bool] = None
     scanners_filtered_disagree: Optional[bool] = None
-    scanners_combined_vulnerable: Optional[bool] = None # true if one or both scanners found a vulnerability
-    scanners_combined_filtered_vulnerable: Optional[bool] = None # true if one or both scanners found a vulnerability (after filtering)
+    scanners_combined_vulnerable: Optional[bool] = None  # true if one or both scanners found a vulnerability
+    scanners_combined_filtered_vulnerable: Optional[
+        bool] = None  # true if one or both scanners found a vulnerability (after filtering)
 
 
 class Task(BaseModel):
@@ -141,10 +142,10 @@ class SemgrepSeverity(Enum):
     ERROR = auto()
 
 
-class BanditProblemSeverity(Enum):
-    RECOMMENDATION = auto()
-    WARNING = auto()
-    ERROR = auto()
+class BanditSeverity(Enum):
+    LOW = auto()
+    MEDIUM = auto()
+    HIGH = auto()
 
 
 class SemgrepConfidence(Enum):
@@ -153,11 +154,10 @@ class SemgrepConfidence(Enum):
     HIGH = auto()
 
 
-class BanditPrecision(Enum):
+class BanditConfidence(Enum):
     LOW = auto()
     MEDIUM = auto()
     HIGH = auto()
-    VERY_HIGH = auto()
 
 
 language_extensions = {
