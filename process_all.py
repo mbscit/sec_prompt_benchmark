@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 import utils
 from compare_attempts import compare
-from filter_config import SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS
+from filter_config import BANDIT_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS
 from process_one import process_file
 
 
@@ -21,7 +21,7 @@ def process_all(data_folder_path: str):
             print(f"processing file: {data_file_path}")
             print()
             try:
-                process_file(data_file_path, SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
+                process_file(data_file_path, BANDIT_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
             except Exception as e:
                 print(f"Error processing file: {data_file_path}")
                 errors.append((data_file_path, e))

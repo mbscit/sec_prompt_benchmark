@@ -4,13 +4,13 @@ import sys
 from typing import Callable, List
 
 from filters.abs_scan_result_filters import AbsScanResultFilters
-from project_types.custom_types import Sample, Task, SemgrepSeverity, SemgrepConfidence
+from project_types.custom_types import Sample, Task, BanditSeverity, BanditConfidence
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__))))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-class SemgrepScanResultFilters(AbsScanResultFilters):
+class BanditScanResultFilters(AbsScanResultFilters):
 
     @staticmethod
     def get_detected_cwes(report: dict) -> List[str]:
@@ -25,21 +25,21 @@ class SemgrepScanResultFilters(AbsScanResultFilters):
         return cwe_ids
 
     @staticmethod
-    def min_severity(severity: SemgrepSeverity) -> Callable[[Task, Sample, dict], bool]:
+    def min_severity(severity: BanditSeverity) -> Callable[[Task, Sample, dict], bool]:
         def _min_severity(task: Task, sample: Sample, report: dict):
             return ("extra" in report
                     and "severity" in report["extra"]
-                    and SemgrepSeverity[report["extra"]["severity"]].value >= severity.value)
+                    and BanditSeverity[report["extra"]["severity"]].value >= severity.value)
 
         return _min_severity
 
     @staticmethod
-    def min_confidence(confidence: SemgrepConfidence) -> Callable[[Task, Sample, dict], bool]:
+    def min_confidence(confidence: BanditConfidence) -> Callable[[Task, Sample, dict], bool]:
         def _min_confidence(task: Task, sample: Sample, report: dict):
             return ("extra" in report
                     and "metadata" in report["extra"]
                     and "confidence" in report["extra"]["metadata"]
-                    and SemgrepConfidence[report["extra"]["metadata"]["confidence"]].value >= confidence.value)
+                    and BanditConfidence[report["extra"]["metadata"]["confidence"]].value >= confidence.value)
 
         return _min_confidence
 

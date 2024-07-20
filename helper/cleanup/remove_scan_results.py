@@ -14,10 +14,10 @@ print(f"removing scan results from: {data_file_path}")
 
 approach = utils.read_approaches_file(data_file_path)
 
-del approach.semgrep_vulnerable_percentage
-del approach.semgrep_filtered_vulnerable_percentage
-del approach.semgrep_sample_vulnerable_percentages
-del approach.semgrep_filtered_sample_vulnerable_percentages
+del approach.bandit_vulnerable_percentage
+del approach.bandit_filtered_vulnerable_percentage
+del approach.bandit_sample_vulnerable_percentages
+del approach.bandit_filtered_sample_vulnerable_percentages
 
 del approach.codeql_vulnerable_percentage
 del approach.codeql_filtered_vulnerable_percentage
@@ -31,19 +31,19 @@ del approach.scanners_agree_sample_filtered_non_vulnerable_percentages
 del approach.scanners_disagree_sample_percentages
 del approach.scanners_disagree_sample_filtered_percentages
 
-approach.errors.pop("semgrep_scan", None)
+approach.errors.pop("bandit_scan", None)
 approach.errors.pop("codeql_scan", None)
 
 for task in approach.tasks:
-    del task.semgrep_vulnerable_samples
-    del task.semgrep_filtered_vulnerable_samples
+    del task.bandit_vulnerable_samples
+    del task.bandit_filtered_vulnerable_samples
 
     for sample in task.samples:
-        del sample.semgrep_successfully_scanned
-        del sample.semgrep_scanner_report
-        del sample.semgrep_filtered_scanner_report
-        del sample.semgrep_vulnerability_found
-        del sample.semgrep_filtered_vulnerability_found
+        del sample.bandit_successfully_scanned
+        del sample.bandit_scanner_report
+        del sample.bandit_filtered_scanner_report
+        del sample.bandit_vulnerability_found
+        del sample.bandit_filtered_vulnerability_found
 
         del sample.codeql_successfully_scanned
         del sample.codeql_scanner_report

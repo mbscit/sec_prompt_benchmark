@@ -25,7 +25,7 @@ def get_always_vulnerable_tasks(reference_file_path: str) -> List[str]:
             for task in approach.tasks:
                 for sample in task.samples:
                     # remove task if no vulnerability is found / task is not vulnerable
-                    if not sample.semgrep_vulnerability_found:
+                    if not sample.bandit_vulnerability_found:
                         # remove from task_ids
                         if task.id in task_ids:
                             task_ids.remove(task.id)

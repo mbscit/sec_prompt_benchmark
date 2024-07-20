@@ -12,7 +12,7 @@ from compare_attempts import compare
 from cwe_resources.structures.enum.detection_effectiveness import DetectionEffectivenessEnumeration
 from cwe_resources.structures.enum.detection_method import DetectionMethodEnumeration
 from cwe_resources.structures.enum.usage import UsageEnumeration
-from filter_config import SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS
+from filter_config import BANDIT_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS
 from helper.task_filters_metadata_based.by_cwe_detection_method import ByCWEDetectionMethod
 from helper.task_filters_metadata_based.by_cwe_mapping_level import ByCWEMappingLevel
 from helper.task_filters_result_based.get_often_filtered_scanners_agree_non_vulnerable_tasks_in_reference_run import \
@@ -45,7 +45,7 @@ def process_ignore(data_folder_path: str, tasks_to_ignore: List[str]):
             approach = utils.read_approaches_file(data_file_path)
             remaining_tasks = [task for task in approach.tasks if task.id not in tasks_to_ignore]
             approach.tasks = remaining_tasks
-            analyze_scan_results.analyze(approach, SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
+            analyze_scan_results.analyze(approach, BANDIT_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
             utils.write_approaches_file(data_file_path, approach)
 
     print("Original compare result:")
@@ -78,7 +78,7 @@ def process_only(data_folder_path: str, tasks_to_consider: List[str]):
             approach = utils.read_approaches_file(data_file_path)
             remaining_tasks = [task for task in approach.tasks if task.id in tasks_to_consider]
             approach.tasks = remaining_tasks
-            analyze_scan_results.analyze(approach, SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
+            analyze_scan_results.analyze(approach, BANDIT_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
             utils.write_approaches_file(data_file_path, approach)
 
     print("Original compare result:")

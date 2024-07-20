@@ -24,11 +24,11 @@ class Sample(BaseModel):
     index: int
     generated_response: Optional[str] = None
     extracted_code: Optional[str] = None
-    semgrep_successfully_scanned: Optional[bool] = None
-    semgrep_scanner_report: Optional[List[dict]] = None
-    semgrep_filtered_scanner_report: Optional[List[dict]] = None
-    semgrep_vulnerability_found: Optional[bool] = None
-    semgrep_filtered_vulnerability_found: Optional[bool] = None
+    bandit_successfully_scanned: Optional[bool] = None
+    bandit_scanner_report: Optional[List[dict]] = None
+    bandit_filtered_scanner_report: Optional[List[dict]] = None
+    bandit_vulnerability_found: Optional[bool] = None
+    bandit_filtered_vulnerability_found: Optional[bool] = None
 
     codeql_successfully_scanned: Optional[bool] = None
     codeql_scanner_report: Optional[List[dict]] = None
@@ -53,8 +53,8 @@ class Task(BaseModel):
     suspected_vulnerabilities: List[str] | str
     language: str
 
-    semgrep_vulnerable_samples: Optional[int] = None
-    semgrep_filtered_vulnerable_samples: Optional[int] = None
+    bandit_vulnerable_samples: Optional[int] = None
+    bandit_filtered_vulnerable_samples: Optional[int] = None
 
     codeql_vulnerable_samples: Optional[int] = None
     codeql_filtered_vulnerable_samples: Optional[int] = None
@@ -77,10 +77,10 @@ class Approach(BaseModel):
 
     errors: Optional[Dict[str, List[SampleError]]] = None
 
-    semgrep_vulnerable_percentage: Optional[float] = None
-    semgrep_filtered_vulnerable_percentage: Optional[float] = None
-    semgrep_sample_vulnerable_percentages: Optional[List[float]] = None
-    semgrep_filtered_sample_vulnerable_percentages: Optional[List[float]] = None
+    bandit_vulnerable_percentage: Optional[float] = None
+    bandit_filtered_vulnerable_percentage: Optional[float] = None
+    bandit_sample_vulnerable_percentages: Optional[List[float]] = None
+    bandit_filtered_sample_vulnerable_percentages: Optional[List[float]] = None
 
     codeql_vulnerable_percentage: Optional[float] = None
     codeql_filtered_vulnerable_percentage: Optional[float] = None
@@ -135,7 +135,7 @@ class Prompt(BaseModel):
     secure_example: Optional[str] = None
 
 
-class SemgrepSeverity(Enum):
+class BanditSeverity(Enum):
     INFO = auto()
     WARNING = auto()
     ERROR = auto()
@@ -147,7 +147,7 @@ class CodeqlProblemSeverity(Enum):
     ERROR = auto()
 
 
-class SemgrepConfidence(Enum):
+class BanditConfidence(Enum):
     LOW = auto()
     MEDIUM = auto()
     HIGH = auto()

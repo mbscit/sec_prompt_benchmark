@@ -3,7 +3,7 @@ import sys
 
 from dotenv import load_dotenv
 
-from filters.semgrep_scan_result_filters import SemgrepScanResultFilters
+from filters.bandit_scan_result_filters import BanditScanResultFilters
 
 sys.path.append("../sec_prompt_benchmark")
 
@@ -22,9 +22,9 @@ for file in os.listdir(data_folder_path):
         for task in approach.tasks:
             tasks[task.id] = set(task.suspected_vulnerabilities)
             for sample in task.samples:
-                if sample.semgrep_scanner_report:
-                    for report in sample.semgrep_scanner_report:
-                        detected_cwes = SemgrepScanResultFilters.get_detected_cwes(report)
+                if sample.bandit_scanner_report:
+                    for report in sample.bandit_scanner_report:
+                        detected_cwes = BanditScanResultFilters.get_detected_cwes(report)
                         if detected_cwes:
                             for cwe in detected_cwes:
                                 tasks[task.id].update(detected_cwes)

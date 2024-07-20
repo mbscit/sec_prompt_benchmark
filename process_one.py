@@ -11,10 +11,10 @@ import analyze_scan_results
 import utils
 from codeql_scan import CodeQLScanner
 from extract_code_from_generated_response import CodeExtractor
-from filter_config import SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS
+from filter_config import BANDIT_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS
 from generate_response_from_modified_prompts import ResponseGenerator
 from project_types.custom_types import Approach, Task, Sample
-from semgrep_scan import SemgrepScanner
+from bandit_scan import BanditScanner
 
 
 def re_extract(relevant_scan_errors, num_regenerations, approach, i):
@@ -33,9 +33,9 @@ def re_extract(relevant_scan_errors, num_regenerations, approach, i):
         else:
             raise ValueError(f"Task {task.id} has multiple samples with index {i}")
         sample.extracted_code = None
-        sample.semgrep_successfully_scanned = False
-        sample.semgrep_scanner_report = None
-        sample.semgrep_filtered_scanner_report = None
+        sample.bandit_successfully_scanned = False
+        sample.bandit_scanner_report = None
+        sample.bandit_filtered_scanner_report = None
 
         sample.codeql_successfully_scanned = False
         sample.codeql_scanner_report = None
@@ -83,7 +83,7 @@ def save_if_changed(file_path, approach, previous_approach_dict):
     return previous_approach_dict
 
 
-def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sample, dict], bool]] = None,
+def process_file(data_file_path, bandit_result_filters: List[Callable[[Task, Sample, dict], bool]] = None,
                  codeql_result_filters: List[Callable[[Task, Sample, dict], bool]] = None):
     load_dotenv()
     samples_per_task = int(os.getenv('SAMPLES_PER_TASK'))
@@ -124,22 +124,22 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
 
             print()
 
-            print(f"Starting semgrep scan for sample {i}")
+            print(f"Starting bandit scan for sample {i}")
             st = time.time()
 
-            semgrep_scanner = SemgrepScanner()
-            semgrep_scanner.scan_samples(approach, i)
+            bandit_scanner = BanditScanner()
+            bandit_scanner.scan_samples(approach, i)
 
             et = time.time()
             previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
-            print(f"Semgrep scan for sample {i} finished, time: {(et - st):.1f}s")
+            print(f"Bandit scan for sample {i} finished, time: {(et - st):.1f}s")
 
             print()
 
     else:
-        print(f"Starting semgrep scan for approach")
-        semgrep_scanner = SemgrepScanner()
-        semgrep_scanner.scan_samples(approach)
+        print(f"Starting bandit scan for approach")
+        bandit_scanner = BanditScanner()
+        bandit_scanner.scan_samples(approach)
         previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
     print(f"Starting codeql scan")
@@ -151,7 +151,7 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
     previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
     et = time.time()
 
-    print(f"Semgrep scan finished, time: {(et - st):.1f}s")
+    print(f"Bandit scan finished, time: {(et - st):.1f}s")
 
     # if errors were found by the scanner, re-extract and re-scan the affected sample
     # if the issue persists, re-generate the response and re-scan the affected sample
@@ -172,8 +172,8 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
 
                     re_extract(relevant_scan_errors, num_regenerations, approach, i)
 
-            semgrep_scanner = SemgrepScanner()
-            semgrep_scanner.scan_samples(approach)
+            bandit_scanner = BanditScanner()
+            bandit_scanner.scan_samples(approach)
             codeql_scanner = CodeQLScanner()
             codeql_scanner.scan_samples(approach)
             previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
@@ -187,19 +187,19 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
 
     previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
-    analyze_scan_results.analyze(approach, semgrep_result_filters, codeql_result_filters)
+    analyze_scan_results.analyze(approach, bandit_result_filters, codeql_result_filters)
     previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
 
 
 def get_relevant_scan_errors(approach, i=-1):
-    if approach.errors and "semgrep_scan" in approach.errors:
-        semgrep_scan_errors = [error for error in approach.errors["semgrep_scan"]]
+    if approach.errors and "bandit_scan" in approach.errors:
+        bandit_scan_errors = [error for error in approach.errors["bandit_scan"]]
         if i > -1:
-            semgrep_scan_errors = [error for error in semgrep_scan_errors if error.sample_index == i]
+            bandit_scan_errors = [error for error in bandit_scan_errors if error.sample_index == i]
     else:
-        semgrep_scan_errors = []
+        bandit_scan_errors = []
 
-    relevant_scan_errors = [error for error in semgrep_scan_errors if
+    relevant_scan_errors = [error for error in bandit_scan_errors if
                             error.error.startswith("Syntax error at")
                             or error.error.startswith("Lexical error at")]
 
@@ -218,7 +218,7 @@ def get_relevant_scan_errors(approach, i=-1):
 def main():
     load_dotenv()
     data_file_path = utils.relative_path_from_root(os.getenv('DATA_FILE_PATH'))
-    process_file(data_file_path, SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
+    process_file(data_file_path, BANDIT_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
 
 
 if __name__ == "__main__":
