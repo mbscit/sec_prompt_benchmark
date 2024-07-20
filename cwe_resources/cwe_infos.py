@@ -104,9 +104,15 @@ def get_related(id):
 def get_suggested_mappings(id) -> List[str]:
     id = id.replace("CWE-", "")
     data = cwe_mapping_suggestions_data
+    try:
+        suggested_mapping_ids = data[id]
+        suggested_mapping_cwe_ids = [f"CWE-{suggested_mapping_id}" for suggested_mapping_id in suggested_mapping_ids]
+    except KeyError:
+        return []
+
 
     try:
-        return data[id]
+        return suggested_mapping_cwe_ids
     except KeyError:
         return []
 

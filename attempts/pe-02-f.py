@@ -411,7 +411,7 @@ def create_approach(dataset: List[Prompt]) -> Approach:
             original_prompt=prompt.prompt,
             modified_prompt=prefix + prompt.prompt + prompt_suffix,
             # END Attempt Specific Changes
-            suspected_vulnerabilities=[re.sub(r'CWE-0+', 'CWE-', prompt.suspected_vulnerability)],
+            suspected_vulnerabilities=[re.sub(r'CWE-0+', 'CWE-', prompt.suspected_vulnerability)] + get_suggested_mappings(prompt.suspected_vulnerability),
             language=prompt.language,
         )
         tasks.append(task)

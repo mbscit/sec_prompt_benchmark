@@ -51,14 +51,10 @@ class AbsScanResultFilters:
 
     @classmethod
     def cwe_in_recommended_mapping(cls, task: Task, sample: Sample, report: dict) -> bool:
-        suspected_vulnerability_ids = [suspected_vulnerability.replace("CWE-", "") for suspected_vulnerability in
-                                       task.suspected_vulnerabilities]
-
         allowed_cwes: List[str] = []
-        for suspected_vulnerability_id in suspected_vulnerability_ids:
-            suggested_mappings = cwe_infos.get_suggested_mappings(suspected_vulnerability_id)
-            allowed_cwes += suggested_mappings + [suspected_vulnerability_id]
-        allowed_cwes = [f"CWE-{allowed_cwe}" for allowed_cwe in allowed_cwes]
+        for suspected_vulnerability in task.suspected_vulnerabilities:
+            suggested_mappings = cwe_infos.get_suggested_mappings(suspected_vulnerability)
+            allowed_cwes += suggested_mappings + [suspected_vulnerability]
         allowed_cwes = list(set(allowed_cwes))
         return cls.only_allow_cwes(report, allowed_cwes)
 
@@ -66,7 +62,7 @@ class AbsScanResultFilters:
     def only_allow_cwes(cls, report: dict, allowed_cwes):
         found_cwes = cls.get_detected_cwes(report)
         found_cwes = [found_cwe for found_cwe in found_cwes if
-                      any(allowed_cwe in found_cwe for allowed_cwe in allowed_cwes)]
+                      any(allowed_cwe == found_cwe for allowed_cwe in allowed_cwes)]
         return len(found_cwes) > 0
 
     @classmethod

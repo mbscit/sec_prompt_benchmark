@@ -5,6 +5,8 @@ from typing import List
 
 from dotenv import load_dotenv
 
+from cwe_resources.cwe_infos import get_suggested_mappings
+
 sys.path.append("../sec_prompt_benchmark")
 
 import utils
@@ -15,11 +17,12 @@ attempt_name = "baseline"
 attempt_description = "Baseline - no prompt modification"
 prompt_prefix = ""
 prompt_suffix = ""
+
+
 # END Attempt Specific Changes
 
 
 def create_approach(dataset: List[Prompt]) -> Approach:
-
     tasks = []
 
     for prompt in dataset:
@@ -27,7 +30,7 @@ def create_approach(dataset: List[Prompt]) -> Approach:
             id=prompt.id,
             original_prompt=prompt.prompt,
             modified_prompt=prompt_prefix + prompt.prompt + prompt_suffix,
-            suspected_vulnerabilities=[re.sub(r'CWE-0+', 'CWE-', prompt.suspected_vulnerability)],
+            suspected_vulnerabilities=[re.sub(r'CWE-0+', 'CWE-', prompt.suspected_vulnerability)] + get_suggested_mappings(prompt.suspected_vulnerability),
             language=prompt.language,
         )
         tasks.append(task)

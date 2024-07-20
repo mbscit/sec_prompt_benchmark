@@ -32,7 +32,7 @@ def create_approach(dataset: List[Prompt]) -> Approach:
             id=prompt.id,
             original_prompt=prompt.prompt,
             modified_prompt=modify_prompt(prompt),
-            suspected_vulnerabilities=[re.sub(r'CWE-0+', 'CWE-', prompt.suspected_vulnerability)],
+            suspected_vulnerabilities=[re.sub(r'CWE-0+', 'CWE-', prompt.suspected_vulnerability)] + get_suggested_mappings(prompt.suspected_vulnerability),
             language=prompt.language,
         )
         tasks.append(task)
