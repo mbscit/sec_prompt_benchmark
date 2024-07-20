@@ -87,7 +87,7 @@ class SemgrepScanner:
 
             indexes_to_consider = []
             for sample_index in range(len(tasks[0].samples)):
-                if any([sample_index for task in tasks if
+                if len([sample_index for task in tasks if
                         any(sample.index == sample_index and not sample.semgrep_successfully_scanned for
                             sample in task.samples)]):
                     indexes_to_consider.append(sample_index)
