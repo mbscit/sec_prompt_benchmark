@@ -138,9 +138,12 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
 
     else:
         print(f"Starting semgrep scan for approach")
+        st = time.time()
         semgrep_scanner = SemgrepScanner()
         semgrep_scanner.scan_samples(approach)
         previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
+        et = time.time()
+        print(f"Semgrep scan finished, time: {(et - st):.1f}s")
 
     print(f"Starting codeql scan")
     st = time.time()
@@ -151,7 +154,7 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
     previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
     et = time.time()
 
-    print(f"Semgrep scan finished, time: {(et - st):.1f}s")
+    print(f"Codeql scan finished, time: {(et - st):.1f}s")
 
     # if errors were found by the scanner, re-extract and re-scan the affected sample
     # if the issue persists, re-generate the response and re-scan the affected sample
