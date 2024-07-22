@@ -66,7 +66,6 @@ class BanditScanner:
             return file_specific_errors
         return []
 
-
     @staticmethod
     def get_file_name(task: Task):
         file_extension = language_extensions.get(task.language)
@@ -74,7 +73,6 @@ class BanditScanner:
             raise ValueError(f"Unsupported language {task.language}")
         file_name = f"{BanditScanner.encode_name(task.id)}.{file_extension}"
         return file_name
-
 
     def scan_samples(self, approach: Approach):
         working_dir = relative_path_from_root('./tmp_code')
@@ -117,13 +115,12 @@ class BanditScanner:
                     language_folder = os.path.join(subfolder, language)
                     os.makedirs(language_folder)
 
-                    for sample_index in range(num_samples):
-                        sample_folder = os.path.join(language_folder, str(sample_index))
+                    for sample in samples_to_scan:
+                        sample_folder = os.path.join(language_folder, str(sample.index))
                         os.makedirs(sample_folder, exist_ok=True)
 
                         for task in tasks_to_consider:
-                            if not task.samples[sample_index].bandit_successfully_scanned:
-                                self.write_extracted_code(task, sample_index, sample_folder)
+                            self.write_extracted_code(task, sample.index, sample_folder)
 
                     results_path = os.path.join(language_folder, "bandit-results.json")
 
@@ -148,17 +145,18 @@ class BanditScanner:
                                     sample: Sample = next(
                                         (sample for sample in task.samples if sample.index == sample_index),
                                         None)
-                                    file_specific_errors = self.extract_scan_errors(json_output, task,
-                                                                                    sample_index)
-                                    sample.bandit_scanner_report = self.extract_scan_results(json_output, task,
-                                                                                             sample_index)
+                                    if not sample.bandit_successfully_scanned:
+                                        file_specific_errors = self.extract_scan_errors(json_output, task,
+                                                                                        sample_index)
+                                        sample.bandit_scanner_report = self.extract_scan_results(json_output, task,
+                                                                                                 sample_index)
 
-                                    if not file_specific_errors:
-                                        sample.bandit_successfully_scanned = True
-                                        self.successful_scans += 1
-                                    else:
-                                        sample.bandit_successfully_scanned = False
-                                        self.error_samples += 1
+                                        if not file_specific_errors:
+                                            sample.bandit_successfully_scanned = True
+                                            self.successful_scans += 1
+                                        else:
+                                            sample.bandit_successfully_scanned = False
+                                            self.error_samples += 1
 
                                 except Exception as e:
                                     logging.error(
@@ -171,7 +169,7 @@ class BanditScanner:
 
                     else:
                         raise Exception(
-                            f"Bandit scan failed for sample {sample_index}. "
+                            f"Bandit scan failed. "
                             f"{analyze_result.stdout} "
                             f" {analyze_result.stderr} ")
 
