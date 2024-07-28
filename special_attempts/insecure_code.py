@@ -5,6 +5,8 @@ from typing import List
 
 from dotenv import load_dotenv
 
+from cwe_resources.cwe_infos import get_suggested_mappings, get_can_also_be
+
 sys.path.append("../sec_prompt_benchmark")
 
 import utils
@@ -23,7 +25,7 @@ def create_approach(dataset: List[Prompt]) -> Approach:
             id=prompt.id,
             original_prompt=prompt.prompt,
             modified_prompt="Hardcoded response:" + prompt.insecure_example,
-            suspected_vulnerabilities=[re.sub(r'CWE-0+', 'CWE-', prompt.suspected_vulnerability)] + get_suggested_mappings(prompt.suspected_vulnerability),
+            suspected_vulnerabilities=[re.sub(r'CWE-0+', 'CWE-', prompt.suspected_vulnerability)] + get_suggested_mappings(prompt.suspected_vulnerability) + get_can_also_be(prompt.suspected_vulnerability),
             language=prompt.language,
         )
 
