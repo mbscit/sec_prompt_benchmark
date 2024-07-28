@@ -59,6 +59,15 @@ class AbsScanResultFilters:
         return cls.only_allow_cwes(report, allowed_cwes)
 
     @classmethod
+    def cwe_in_can_also_be(cls, task: Task, sample: Sample, report: dict) -> bool:
+        can_be: List[str] = []
+        for suspected_vulnerability in task.suspected_vulnerabilities:
+            can_also_be = cwe_infos.get_can_also_be(suspected_vulnerability)
+            can_be += can_also_be + [suspected_vulnerability]
+        can_be = list(set(can_be))
+        return cls.only_allow_cwes(report, can_be)
+
+    @classmethod
     def only_allow_cwes(cls, report: dict, allowed_cwes):
         found_cwes = cls.get_detected_cwes(report)
         found_cwes = [found_cwe for found_cwe in found_cwes if

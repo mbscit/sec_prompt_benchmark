@@ -14,12 +14,13 @@ import utils
 # Global variables to cache data
 cwe_hierarchy_data = None
 cwe_mapping_suggestions_data = None
+cwe_can_also_be_data = None
 cwe_mapping_usage_data = None
 cwe_detection_method_data: Dict[str, List[DetectionInformation]] = {}
 
 
 def load_data():
-    global cwe_hierarchy_data, cwe_mapping_suggestions_data, cwe_mapping_usage_data, cwe_detection_method_data
+    global cwe_hierarchy_data, cwe_mapping_suggestions_data, cwe_can_also_be_data, cwe_mapping_usage_data, cwe_detection_method_data
     cwe_hierarchy_file_path = utils.relative_path_from_root('cwe_resources/structures/json/cwe_hierarchy.json')
     with open(cwe_hierarchy_file_path, 'r') as file:
         cwe_hierarchy_data = json.load(file)
@@ -28,6 +29,11 @@ def load_data():
         'cwe_resources/structures/json/cwe_mapping_suggestions.json')
     with open(cwe_mapping_suggestions_file_path, 'r') as file:
         cwe_mapping_suggestions_data = json.load(file)
+
+    cwe_can_also_be_file_path = utils.relative_path_from_root(
+        'cwe_resources/structures/json/cwe_can_also_be.json')
+    with open(cwe_can_also_be_file_path, 'r') as file:
+        cwe_can_also_be_data = json.load(file)
 
     cwe_mapping_usage_file_path = utils.relative_path_from_root(
         'cwe_resources/structures/json/cwe_mapping_usage.json')
@@ -113,6 +119,22 @@ def get_suggested_mappings(id) -> List[str]:
 
     try:
         return suggested_mapping_cwe_ids
+    except KeyError:
+        return []
+
+
+def get_can_also_be(id) -> List[str]:
+    id = id.replace("CWE-", "")
+    data = cwe_can_also_be_data
+    try:
+        can_also_be_ids = data[id]
+        can_also_be_cwe_ids = [f"CWE-{can_also_be_id}" for can_also_be_id in can_also_be_ids]
+    except KeyError:
+        return []
+
+
+    try:
+        return can_also_be_cwe_ids
     except KeyError:
         return []
 
