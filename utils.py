@@ -1,6 +1,8 @@
 import concurrent
 import json
+import logging
 import os
+import time
 from typing import List
 
 import openai
@@ -138,3 +140,21 @@ def write_dataset_file(data_file_path, prompts: List[Prompt]):
 
 def convert_to_enum_identifier(text: str) -> str:
     return text.replace(" ", "_").replace("/", "_").replace("-", "_").upper()
+
+
+def retry_on_rate_limit(func, *args, **kwargs):
+    waiting_period_seconds = 15
+    max_retries = 5
+    retries = 0
+    while retries < max_retries:
+        try:
+            return func(*args, **kwargs)
+        except openai.RateLimitError:
+            retries += 1
+            if retries < max_retries:
+                logging.warning(
+                    f"Rate limit error encountered. Retrying after {waiting_period_seconds} seconds...")
+                time.sleep(15)
+            else:
+                logging.error("Max retries reached. Function call failed due to rate limit.")
+                raise

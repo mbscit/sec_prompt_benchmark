@@ -28,34 +28,36 @@ class CodeExtractor:
     # if force_gpt is set, the code will be extracted using GPT
     # otherwise, the code is extracted directly on the first attempt and only if multiple code blocks are found,
     # GPT is used
-    def extract_code(self, generated_response, language, force_gpt) -> str:
+    def extract_code(self, task: Task, sample: Sample, force_gpt) -> str:
         for attempt in range(4):
-            message_content = f"""Extract only the code and complete it to a valid {language} file: 
-        "{generated_response}" 
-        Only output the code and nothing else, so that when I copy your answer into a file, it will be a valid ".{language_extensions.get(language)}" file."""
+            message_content = (
+                f"Only output the {language_extensions.get(task.language)} code and nothing else, so that when I copy your answer into a file, "
+                f"it will be a valid {language_extensions.get(task.language)} file.")
 
             # First attempt is to extract the code directly
             if attempt == 0 and not force_gpt:
-                res = generated_response
+                res = sample.generated_response
             # Second attempt is to extract the code with the help of chat-gpt
             else:
                 completion = self.client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
+                        {"role": "user", "content": task.modified_prompt},
+                        {"role": "assistant", "content": sample.generated_response},
                         {"role": "user", "content": message_content}
                     ]
                 )
 
                 res = completion.choices[0].message.content
 
-            code_blocks = re.findall(r"```(\S*)\n(.*?)```", res, re.DOTALL)
+        code_blocks = re.findall(r"```(\S*)\n(.*?)```", res, re.DOTALL)
 
-            if len(code_blocks) > 1:
-                raise CodeExtractor.MultipleBlocksException()
-            elif len(code_blocks) == 1:
-                return code_blocks[0][1]
-            else:
-                return res
+        if len(code_blocks) > 1:
+            raise CodeExtractor.MultipleBlocksException()
+        elif len(code_blocks) == 1:
+            return code_blocks[0][1]
+        else:
+            return res
 
     def extract_code_for_index(self, task: Task, sample_index: int, force_gpt=False):
         sample: Sample = next((sample for sample in task.samples if sample.index == sample_index), None)
@@ -66,7 +68,7 @@ class CodeExtractor:
             else:
                 for attempt in range(3):
                     try:
-                        res = self.extract_code(sample.generated_response, task.language, attempt > 0 or force_gpt)
+                        res = self.extract_code(task, sample, attempt > 0 or force_gpt)
                         sample.extracted_code = res
                         increment_counter(self.successful_extractions)
                         return

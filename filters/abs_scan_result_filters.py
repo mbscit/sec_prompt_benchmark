@@ -79,7 +79,7 @@ class AbsScanResultFilters:
         def _ignore_cwes(task: Task, sample: Sample, report: dict):
             found_cwes: List[str] = cls.get_detected_cwes(report)
             for ignored_cwe in cwes_to_ignore:
-                found_cwes = [cwe for cwe in found_cwes if ignored_cwe not in cwe]
+                found_cwes = [cwe for cwe in found_cwes if cwe != ignored_cwe]
             return len(found_cwes) > 0
 
         return _ignore_cwes

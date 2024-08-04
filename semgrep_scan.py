@@ -95,7 +95,7 @@ class SemgrepScanner:
             if not len(indexes_to_consider):
                 print("Approach already been scanned with semgrep for all tasks")
             else:
-                with ThreadPoolExecutor() as executor:
+                with ThreadPoolExecutor(max_workers=8) as executor:
                     # Create a scanner for every index
                     # assuming samples in all tasks have the same length
                     # since validate_sample_integrity checks it

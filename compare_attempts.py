@@ -62,9 +62,10 @@ def compare(data_folder_path: str):
     print(print_matrix)
 
     with open("attempt_comparison.csv", "w+") as output:
-        csvWriter = csv.DictWriter(output, matrix[0].keys(), quoting=csv.QUOTE_ALL)
-        csvWriter.writeheader()
-        csvWriter.writerows(matrix)
+        if matrix:
+            csvWriter = csv.DictWriter(output, matrix[0].keys(), quoting=csv.QUOTE_ALL)
+            csvWriter.writeheader()
+            csvWriter.writerows(matrix)
 
 
 def analyze(approach: Approach, results):

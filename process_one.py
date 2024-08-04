@@ -4,7 +4,6 @@ import os
 import time
 from typing import List, Callable
 
-import openai
 from dotenv import load_dotenv
 
 import analyze_scan_results
@@ -13,14 +12,15 @@ from codeql_scan import CodeQLScanner
 from extract_code_from_generated_response import CodeExtractor
 from filter_config import SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS
 from generate_response_from_modified_prompts import ResponseGenerator
-from project_types.custom_types import Approach, Task, Sample
+from project_types.custom_types import Approach, Task, Sample, SampleError
 from semgrep_scan import SemgrepScanner
+from utils import retry_on_rate_limit
 
 
 def re_extract(relevant_scan_errors, num_regenerations, approach, i):
     re_generate = not num_regenerations & 1  # only re-generate on even tries, otherwise only re-extract
-    logging.info(
-        f"Syntax errors found in {len(relevant_scan_errors)} samples at index {i}, "
+    print(
+        f"Syntax errors found in {len(set([(error.sample_index, error.task_id) for error in relevant_scan_errors]))} samples at index {i}, "
         f"{'re-extracting' if re_generate else 're-generating'} "
         f"and rescanning affected samples")
     error_tasks = [task for task in approach.tasks if
@@ -54,24 +54,6 @@ def re_extract(relevant_scan_errors, num_regenerations, approach, i):
     # (re-)extract affected samples
     # if we didn't re-generate, we will use GPT to extract the code this time
     retry_on_rate_limit(code_extractor.extract_missing, approach, i, not re_generate)
-
-
-def retry_on_rate_limit(func, *args, **kwargs):
-    waiting_period_seconds = 15
-    max_retries = 5
-    retries = 0
-    while retries < max_retries:
-        try:
-            return func(*args, **kwargs)
-        except openai.RateLimitError:
-            retries += 1
-            if retries < max_retries:
-                logging.warning(
-                    f"Rate limit error encountered. Retrying after {waiting_period_seconds} seconds...")
-                time.sleep(15)
-            else:
-                logging.error("Max retries reached. Function call failed due to rate limit.")
-                raise
 
 
 def save_if_changed(file_path, approach, previous_approach_dict):
@@ -171,7 +153,7 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
 
                 relevant_scan_errors = get_relevant_scan_errors(approach, i)
                 if relevant_scan_errors:
-                    logging.info(f"Syntax errors found in {len(relevant_scan_errors)} samples at index {i}, .")
+                    logging.info(f"Syntax errors found in {len(set([(error.sample_index, error.task_id) for error in relevant_scan_errors]))} samples at index {i}.")
 
                     re_extract(relevant_scan_errors, num_regenerations, approach, i)
 
@@ -184,7 +166,7 @@ def process_file(data_file_path, semgrep_result_filters: List[Callable[[Task, Sa
     relevant_scan_errors = get_relevant_scan_errors(approach)
 
     if relevant_scan_errors:
-        logging.error(
+        print(
             f"""Failed to resolve syntax errors in {len(set([error.task_id + "-" + str(error.sample_index) for error in relevant_scan_errors]))} samples after 3 attempts.
                     Check the error field in data file for more information.""")
 
@@ -225,7 +207,7 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    # logging.basicConfig(level=logging.INFO)
     st = time.time()
     load_dotenv()
     main()
