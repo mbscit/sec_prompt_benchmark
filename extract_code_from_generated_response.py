@@ -40,7 +40,7 @@ class CodeExtractor:
             # Second attempt is to extract the code with the help of chat-gpt
             else:
                 completion = self.client.chat.completions.create(
-                    model="gpt-3.5-turbo",
+                    model="gpt-3.5-turbo-0125",
                     messages=[
                         {"role": "user",
                          "content": sample.modified_prompt if sample.modified_prompt else task.modified_prompt},

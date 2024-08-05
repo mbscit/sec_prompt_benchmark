@@ -24,7 +24,7 @@ class ResponseGenerator:
 
     def generate_response(self, prompt: str):
         completion = self.client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-3.5-turbo-0125",
             messages=[
                 {"role": "user", "content": prompt}
             ]
