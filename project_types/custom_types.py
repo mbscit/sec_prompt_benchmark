@@ -22,6 +22,8 @@ class SampleError(BaseModel):
 
 class Sample(BaseModel):
     index: int
+    original_prompt: Optional[str] = None
+    modified_prompt: Optional[str] = None
     generated_response: Optional[str] = None
     extracted_code: Optional[str] = None
     semgrep_successfully_scanned: Optional[bool] = None

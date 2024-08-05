@@ -35,11 +35,20 @@ class ResponseGenerator:
         sample: Sample = next((sample for sample in task.samples if sample.index == sample_index), None)
         try:
             if not sample:
-                sample = Sample(index=sample_index)
-                task.samples.append(sample)
+                if task.modified_prompt:
+                    sample = Sample(index=sample_index)
+                    task.samples.append(sample)
+                else:
+                    raise ValueError(f"No prompt available for task {task.id} sample {sample_index}")
             if not sample.generated_response:
-                sample.generated_response = self.generate_response(task.modified_prompt)
-                increment_counter(self.successful_generations)
+                if task.modified_prompt:
+                    sample.generated_response = self.generate_response(task.modified_prompt)
+                    increment_counter(self.successful_generations)
+                elif sample.modified_prompt:
+                    sample.generated_response = self.generate_response(sample.modified_prompt)
+                    increment_counter(self.successful_generations)
+                else:
+                    raise ValueError(f"No prompt available for task {task.id} sample {sample_index}")
             else:
                 logging.info(f"Skipping {task.id} - response already generated for sample {sample_index}")
                 increment_counter(self.skipped_samples)
@@ -57,7 +66,9 @@ class ResponseGenerator:
 
     def generate_missing(self, approach: Approach, sample_index: int):
         tasks: List[Task] = approach.tasks
-        utils.validate_task_integrity(tasks, ["modified_prompt"])
+        utils.validate_task_integrity(tasks, [])
+        if not all(task.modified_prompt for task in tasks) and not all(sample.modified_prompt for task in tasks for sample in task.samples):
+            raise ValueError("No modified prompts available. Either all tasks or all samples must have a modified prompt")
 
         if all(any(sample.index == sample_index and sample.generated_response for sample in task.samples) for task in
                tasks):

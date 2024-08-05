@@ -1,8 +1,10 @@
+import ast
 import concurrent
 import json
 import logging
 import os
 import time
+import warnings
 from typing import List
 
 import openai
@@ -59,6 +61,9 @@ def validate_task_integrity(tasks: List[Task], required_attributes: List[str]):
 
 def validate_sample_integrity(tasks: List[Task], required_attributes: List[str], num_samples: int = -1):
     errors: List[str] = []
+
+    if any(task.modified_prompt for task in tasks) and any(sample.modified_prompt for task in tasks for sample in task.samples):
+        raise ValueError("Both task and sample modified prompts are present. Only one can be used.")
 
     # take the length of the first samples array for reference
     if num_samples == -1:
@@ -158,3 +163,33 @@ def retry_on_rate_limit(func, *args, **kwargs):
             else:
                 logging.error("Max retries reached. Function call failed due to rate limit.")
                 raise
+
+
+def get_ast_height(node):
+    """
+    Recursively calculate the height of an AST.
+    """
+    if not isinstance(node, ast.AST) or not list(ast.iter_child_nodes(node)):
+        return 1
+    return 1 + max(get_ast_height(child) for child in ast.iter_child_nodes(node))
+
+
+def is_complex_code(string, min_height=3):
+    """
+    Determine if the Python code in the string is complex enough
+    based on the AST height.
+    """
+    try:
+        # Parse the string into an AST
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=SyntaxWarning)
+            tree = ast.parse(string)
+
+        # Compute the height of the AST
+        height = get_ast_height(tree)
+
+        # Check if the height meets the minimum threshold
+        return height >= min_height
+    except SyntaxError:
+        # If there's a syntax error, the string is not valid Python code
+        return False

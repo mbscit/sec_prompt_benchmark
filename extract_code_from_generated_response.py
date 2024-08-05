@@ -42,10 +42,12 @@ class CodeExtractor:
                 completion = self.client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
-                        {"role": "user", "content": task.modified_prompt},
+                        {"role": "user",
+                         "content": sample.modified_prompt if sample.modified_prompt else task.modified_prompt},
                         {"role": "assistant", "content": sample.generated_response},
                         {"role": "user", "content": message_content}
                     ]
+
                 )
 
                 res = completion.choices[0].message.content
@@ -108,7 +110,8 @@ class CodeExtractor:
         else:
             with ThreadPoolExecutor() as executor:
                 try:
-                    futures = {executor.submit(self.extract_code_for_index, task, sample_index, force_gpt): task for task in
+                    futures = {executor.submit(self.extract_code_for_index, task, sample_index, force_gpt): task for
+                               task in
                                tasks}
                     utils.handle_futures_with_ratelimit(futures)
                 except openai.RateLimitError as e:
