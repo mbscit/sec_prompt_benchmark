@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import sys
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
@@ -15,10 +16,30 @@ from project_types.custom_types import Approach, Task, Sample
 
 class AbsIterationAttempt(ABC):
     def __init__(self, base_approach_path: str, attempt_description: str, attempt_name: str):
+        load_dotenv()
+
+
+        base_approach_file_name = os.path.basename(base_approach_path)[:-5]
+        base_of_base = re.sub(r"-iteration-\d+", "", base_approach_file_name)
+
+        if base_approach_file_name.startswith(attempt_name):
+            iteration_pattern = fr"{base_of_base}-iteration-(\d+)"
+
+            iteration_match = re.search(iteration_pattern, base_approach_file_name)
+            if iteration_match:
+                current_iteration = int(iteration_match.group(1))
+                next_iteration = current_iteration + 1
+                attempt_name = f"{base_approach_file_name.replace(f'-iteration-{current_iteration}', '')}-iteration-{next_iteration}.json"
+            else:
+                attempt_name = f"{attempt_name}-from-{base_approach_file_name}-iteration-0.json"
+        else:
+            attempt_name = f"{attempt_name}-from-{base_approach_file_name}-iteration-0.json"
+
+        print(attempt_name)
+
         self.base_attempt_path = utils.relative_path_from_root(base_approach_path)
         self.attempt_name = attempt_name
         self.attempt_description = attempt_description
-        load_dotenv()
 
     @abstractmethod
     def add_new_prompt(self, sample: Sample, task: Task, original_sample: Sample) -> str:
