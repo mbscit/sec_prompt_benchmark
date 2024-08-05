@@ -31,9 +31,9 @@ class AbsIterationAttempt(ABC):
                 next_iteration = current_iteration + 1
                 attempt_name = f"{base_approach_file_name.replace(f'-iteration-{current_iteration}', '')}-iteration-{next_iteration}.json"
             else:
-                attempt_name = f"{attempt_name}-from-{base_approach_file_name}-iteration-0.json"
+                attempt_name = f"{attempt_name}-from-{base_approach_file_name}-iteration-1.json"
         else:
-            attempt_name = f"{attempt_name}-from-{base_approach_file_name}-iteration-0.json"
+            attempt_name = f"{attempt_name}-from-{base_approach_file_name}-iteration-1.json"
 
         print(attempt_name)
 
