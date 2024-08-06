@@ -197,6 +197,19 @@ def get_relevant_scan_errors(approach, i=-1):
     relevant_scan_errors += [error for error in codeql_scan_errors if
                              error.error.startswith("Extraction failed in")]
 
+    for task in approach.tasks:
+        samples_without_complex_code = [sample for sample in task.samples if
+                                        not utils.is_complex_code(sample.extracted_code, 2)]
+        if i > -1:
+            samples_without_complex_code = [sample for sample in samples_without_complex_code if sample.index == i]
+
+        no_complex_code_errors = [
+            SampleError(task_id=task.id, sample_index=sample.index, error="Extracted_code contains no or trivial code")
+            for sample in samples_without_complex_code]
+        relevant_scan_errors += no_complex_code_errors
+        for sample_index in set([error.sample_index for error in no_complex_code_errors]):
+            approach.update_errors("code_check", no_complex_code_errors, sample_index)
+
     return relevant_scan_errors
 
 
