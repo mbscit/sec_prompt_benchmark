@@ -31,7 +31,7 @@ class ResponseGenerator:
         )
         return completion.choices[0].message.content
 
-    def generate_responses_for_index(self, task: Task, sample_index: int):
+    def generate_responses_for_index(self, approach: Approach, task: Task, sample_index: int):
         sample: Sample = next((sample for sample in task.samples if sample.index == sample_index), None)
         try:
             if not sample:
@@ -76,7 +76,7 @@ class ResponseGenerator:
         else:
             with ThreadPoolExecutor() as executor:
                 try:
-                    futures = {executor.submit(self.generate_responses_for_index, task, sample_index): task for task in
+                    futures = {executor.submit(self.generate_responses_for_index, approach, task, sample_index): task for task in
                                tasks}
                     utils.handle_futures_with_ratelimit(futures)
                 except openai.RateLimitError as e:

@@ -61,7 +61,7 @@ class CodeExtractor:
         else:
             return res
 
-    def extract_code_for_index(self, task: Task, sample_index: int, force_gpt=False):
+    def extract_code_for_index(self, approach: Approach, task: Task, sample_index: int, force_gpt=False):
         sample: Sample = next((sample for sample in task.samples if sample.index == sample_index), None)
         try:
             if sample.extracted_code:
@@ -110,7 +110,7 @@ class CodeExtractor:
         else:
             with ThreadPoolExecutor() as executor:
                 try:
-                    futures = {executor.submit(self.extract_code_for_index, task, sample_index, force_gpt): task for
+                    futures = {executor.submit(self.extract_code_for_index, approach, task, sample_index, force_gpt): task for
                                task in
                                tasks}
                     utils.handle_futures_with_ratelimit(futures)
