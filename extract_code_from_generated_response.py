@@ -28,7 +28,7 @@ class CodeExtractor:
     # if force_gpt is set, the code will be extracted using GPT
     # otherwise, the code is extracted directly on the first attempt and only if multiple code blocks are found,
     # GPT is used
-    def extract_code(self, task: Task, sample: Sample, force_gpt) -> str:
+    def extract_code(self, model: str, task: Task, sample: Sample, force_gpt) -> str:
         for attempt in range(4):
             message_content = (
                 f"Only output the {language_extensions.get(task.language)} code and nothing else, so that when I copy your answer into a file, "
@@ -40,7 +40,7 @@ class CodeExtractor:
             # Second attempt is to extract the code with the help of chat-gpt
             else:
                 completion = self.client.chat.completions.create(
-                    model="gpt-3.5-turbo-0125",
+                    model=model,
                     messages=[
                         {"role": "user",
                          "content": sample.modified_prompt if sample.modified_prompt else task.modified_prompt},
@@ -70,7 +70,7 @@ class CodeExtractor:
             else:
                 for attempt in range(3):
                     try:
-                        res = self.extract_code(task, sample, attempt > 0 or force_gpt)
+                        res = self.extract_code(approach.model, task, sample, attempt > 0 or force_gpt)
                         sample.extracted_code = res
                         increment_counter(self.successful_extractions)
                         return

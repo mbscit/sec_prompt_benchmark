@@ -54,6 +54,7 @@ class AbsAttempt(ABC):
         approach = Approach(
             id=self.attempt_name,
             description=self.attempt_description,
+            model=os.getenv("MODEL_FOR_NEW_ATTEMPTS"),
             tasks=tasks,
         )
 

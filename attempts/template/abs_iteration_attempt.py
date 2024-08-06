@@ -42,7 +42,7 @@ class AbsIterationAttempt(ABC):
         self.attempt_description = attempt_description
 
     @abstractmethod
-    def add_new_prompt(self, sample: Sample, task: Task, original_sample: Sample) -> str:
+    def add_new_prompt(self, model: str, sample: Sample, task: Task, original_sample: Sample) -> str:
         pass
 
     def create(self):
@@ -99,7 +99,7 @@ class AbsIterationAttempt(ABC):
 
                 print(f"Number of samples: {len(all_samples)}")
                 futures = {
-                    executor.submit(self.add_new_prompt, sample, original_task, original_sample): (
+                    executor.submit(self.add_new_prompt, os.getenv("MODEL_FOR_NEW_ATTEMPTS"), sample, original_task, original_sample): (
                         sample, original_task, original_sample)
                     for sample, original_task, original_sample in all_samples
                 }

@@ -22,9 +22,9 @@ class ResponseGenerator:
         self.skipped_samples = Value('i', 0)
         self.error_samples = Value('i', 0)
 
-    def generate_response(self, prompt: str):
+    def generate_response(self, model: str, prompt: str):
         completion = self.client.chat.completions.create(
-            model="gpt-3.5-turbo-0125",
+            model=model,
             messages=[
                 {"role": "user", "content": prompt}
             ]
@@ -42,10 +42,10 @@ class ResponseGenerator:
                     raise ValueError(f"No prompt available for task {task.id} sample {sample_index}")
             if not sample.generated_response:
                 if task.modified_prompt:
-                    sample.generated_response = self.generate_response(task.modified_prompt)
+                    sample.generated_response = self.generate_response(approach.model, task.modified_prompt)
                     increment_counter(self.successful_generations)
                 elif sample.modified_prompt:
-                    sample.generated_response = self.generate_response(sample.modified_prompt)
+                    sample.generated_response = self.generate_response(approach.model, sample.modified_prompt)
                     increment_counter(self.successful_generations)
                 else:
                     raise ValueError(f"No prompt available for task {task.id} sample {sample_index}")

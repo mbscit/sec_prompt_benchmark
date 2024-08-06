@@ -76,6 +76,7 @@ class Task(BaseModel):
 class Approach(BaseModel):
     id: str
     description: str
+    model: str
 
     errors: Optional[Dict[str, List[SampleError]]] = None
 
@@ -109,6 +110,10 @@ class Approach(BaseModel):
 
     syntax_error_percentage: Optional[float] = None
     samples_with_trivial_code: Optional[float] = None
+    avg_ast_height: Optional[float] = None
+
+    syntax_error_percentage: Optional[float] = None
+    samples_without_complex_code_percentage: Optional[float] = None
     avg_ast_height: Optional[float] = None
 
     tasks: List[Task]

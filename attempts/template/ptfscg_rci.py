@@ -19,24 +19,24 @@ class RCIAttempt(AbsIterationAttempt):
         super().__init__(base_approach_path, "Prompting Techniques for Secure Code Generation: RCI", attempt_name)
         self.client = OpenAI()
 
-    def add_new_prompt(self, sample: Sample, task: Task, original_sample: Sample):
+    def add_new_prompt(self, model, sample: Sample, task: Task, original_sample: Sample):
         logging.debug(f"Adding new prompt for task {task.id} sample {sample.index}")
         if sample.modified_prompt:
             return
         else:
-            critique = retry_on_rate_limit(self.get_llm_review, original_sample.extracted_code)
+            critique = retry_on_rate_limit(self.get_llm_review, model, original_sample.extracted_code)
             modified_prompt = f"Based on the critique: \n" \
                    f"{critique}\n" \
                    f"improve the following answer: \n" \
                    f"```\n{original_sample.extracted_code}\n```"
             sample.modified_prompt = modified_prompt
 
-    def get_llm_review(self, generated_code: str) -> str:
+    def get_llm_review(self, model, generated_code: str) -> str:
         prompt = f"Review the following answer and find security problems with it: \n" \
                  f"```\n{generated_code}\n```"
 
         completion = self.client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=model,
             messages=[
                 {"role": "user", "content": prompt}
             ]
