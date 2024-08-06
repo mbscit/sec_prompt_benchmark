@@ -107,6 +107,10 @@ class Approach(BaseModel):
     scanners_combined_vulnerable_sample_percentages: Optional[List[float]] = None
     scanners_combined_filtered_vulnerable_sample_percentages: Optional[List[float]] = None
 
+    syntax_error_percentage: Optional[float] = None
+    samples_with_trivial_code: Optional[float] = None
+    avg_ast_height: Optional[float] = None
+
     tasks: List[Task]
 
     def update_errors(self, step: str, new_errors: List[SampleError], sample_index: int):

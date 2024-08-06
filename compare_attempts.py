@@ -54,7 +54,9 @@ def compare(data_folder_path: str):
             "Scanners Combined Vulnerable Samples",
             "Semgrep Vulnerable Samples",
             "Codeql Vulnerable Samples",
-
+            "Average AST height",
+            "Samples with trivial Code",
+            "Samples with Syntax Errors"
         ],
     ).to_string(index=False, header=True)
 
@@ -81,12 +83,12 @@ def analyze(approach: Approach, results):
                 "Semgrep Vulnerable Samples": "-",
                 "Codeql Vulnerable Samples": "-",
                 "Scanners Agree Vulnerable Samples": "-",
-                "Scanners Disagree Samples": "-",                
+                "Scanners Disagree Samples": "-",
                 "Scanners Combined Vulnerable Samples": "-",
                 "Semgrep Filtered Vulnerable Samples": "-",
                 "Codeql Filtered Vulnerable Samples": "-",
                 "Scanners Agree Filtered Vulnerable Samples": "-",
-                "Scanners Disagree Filtered Samples": "-",                
+                "Scanners Disagree Filtered Samples": "-",
                 "Scanners Combined Filtered Vulnerable Samples": "-",
 
             })
@@ -109,9 +111,15 @@ def analyze(approach: Approach, results):
                 "Scanners Disagree Filtered Samples": approach.scanners_disagree_filtered_percentage,
                 "Scanners Combined Filtered Vulnerable Samples": approach.scanners_combined_filtered_vulnerable_percentage,
 
+                "Average AST height": approach.avg_ast_height,
+                "Samples with trivial Code": approach.samples_with_trivial_code,
+                "Samples with Syntax Errors": approach.syntax_error_percentage,
+
                 "Min Semgrep Vulnerable Percentage": min(approach.semgrep_sample_vulnerable_percentages),
-                "Median Semgrep Vulnerable Percentage": statistics.median(approach.semgrep_sample_vulnerable_percentages),
-                "Average Semgrep Vulnerable Percentage": statistics.mean(approach.semgrep_sample_vulnerable_percentages),
+                "Median Semgrep Vulnerable Percentage": statistics.median(
+                    approach.semgrep_sample_vulnerable_percentages),
+                "Average Semgrep Vulnerable Percentage": statistics.mean(
+                    approach.semgrep_sample_vulnerable_percentages),
                 "Max Semgrep Vulnerable Percentage": max(approach.semgrep_sample_vulnerable_percentages),
                 "Min Semgrep Filtered Percentage": min(approach.semgrep_filtered_sample_vulnerable_percentages),
                 "Median Semgrep Filtered Percentage": statistics.median(
@@ -167,23 +175,31 @@ def analyze(approach: Approach, results):
                 "Median Scanners Disagree Percentage": statistics.median(approach.scanners_disagree_sample_percentages),
                 "Average Scanners Disagree Percentage": statistics.mean(approach.scanners_disagree_sample_percentages),
                 "Max Scanners Disagree Percentage": max(approach.scanners_disagree_sample_percentages),
-                "Min Scanners Disagree Filtered Percentage": min(approach.scanners_disagree_sample_filtered_percentages),
+                "Min Scanners Disagree Filtered Percentage": min(
+                    approach.scanners_disagree_sample_filtered_percentages),
                 "Median Scanners Disagree Filtered Percentage": statistics.median(
                     approach.scanners_disagree_sample_filtered_percentages),
                 "Average Scanners Disagree Filtered Percentage": statistics.mean(
                     approach.scanners_disagree_sample_filtered_percentages),
-                "Max Scanners Disagree Filtered Percentage": max(approach.scanners_disagree_sample_filtered_percentages),
-                
-                "Min Scanners Combined Vulnerable Percentage": min(approach.scanners_combined_vulnerable_sample_percentages),
-                "Median Scanners Combined Vulnerable Percentage": statistics.median(approach.scanners_combined_vulnerable_sample_percentages),
-                "Average Scanners Combined Vulnerable Percentage": statistics.mean(approach.scanners_combined_vulnerable_sample_percentages),
-                "Max Scanners Combined Vulnerable Percentage": max(approach.scanners_combined_vulnerable_sample_percentages),
-                "Min Scanners Combined Vulnerable Filtered Percentage": min(approach.scanners_combined_filtered_vulnerable_sample_percentages),
+                "Max Scanners Disagree Filtered Percentage": max(
+                    approach.scanners_disagree_sample_filtered_percentages),
+
+                "Min Scanners Combined Vulnerable Percentage": min(
+                    approach.scanners_combined_vulnerable_sample_percentages),
+                "Median Scanners Combined Vulnerable Percentage": statistics.median(
+                    approach.scanners_combined_vulnerable_sample_percentages),
+                "Average Scanners Combined Vulnerable Percentage": statistics.mean(
+                    approach.scanners_combined_vulnerable_sample_percentages),
+                "Max Scanners Combined Vulnerable Percentage": max(
+                    approach.scanners_combined_vulnerable_sample_percentages),
+                "Min Scanners Combined Vulnerable Filtered Percentage": min(
+                    approach.scanners_combined_filtered_vulnerable_sample_percentages),
                 "Median Scanners Combined Vulnerable Filtered Percentage": statistics.median(
                     approach.scanners_combined_filtered_vulnerable_sample_percentages),
                 "Average Scanners Combined Vulnerable Filtered Percentage": statistics.mean(
                     approach.scanners_combined_filtered_vulnerable_sample_percentages),
-                "Max Scanners Combined Vulnerable Filtered Percentage": max(approach.scanners_combined_filtered_vulnerable_sample_percentages),
+                "Max Scanners Combined Vulnerable Filtered Percentage": max(
+                    approach.scanners_combined_filtered_vulnerable_sample_percentages),
             }
         )
 

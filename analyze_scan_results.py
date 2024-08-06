@@ -1,6 +1,8 @@
+import ast
 import copy
 import os
 import statistics
+import warnings
 from typing import List, Callable
 
 from dotenv import load_dotenv
@@ -49,10 +51,25 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
         utils.validate_task_integrity(tasks, ["id", "samples"])
         utils.validate_sample_integrity(tasks, ["semgrep_successfully_scanned", "codeql_successfully_scanned"])
 
+        ast_height_sum = 0
+        num_syntax_errors = 0
+        num_samples_without_complex_code = 0
         for task in tasks:
             # set bool vulnerability_found and filtered_vulnerability_found for each sample
             # and store filtered reports in sample.filtered_scanner_report
             for sample in task.samples:
+
+                try:
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore", category=SyntaxWarning)
+                        tree = ast.parse(sample.extracted_code)
+                        tree_height = utils.get_ast_height(tree)
+                        ast_height_sum += tree_height
+                        if tree_height < 3:
+                            num_samples_without_complex_code += 1
+                except SyntaxError:
+                    num_syntax_errors += 1
+
                 semgrep_filtered_reports = copy.deepcopy(sample.semgrep_scanner_report)
                 for scan_result_filter in semgrep_result_filters:
                     semgrep_filtered_reports = [result for result in semgrep_filtered_reports if
@@ -133,6 +150,10 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
                 [sample for sample in task.samples if sample.scanners_combined_filtered_vulnerable])
 
         total_samples = sum(len(task.samples) for task in tasks)
+
+        approach.avg_ast_height = ast_height_sum / (total_samples - num_syntax_errors)
+        approach.syntax_error_percentage = (num_syntax_errors / total_samples) * 100 if total_samples > 0 else 0
+        approach.samples_with_trivial_code = (num_samples_without_complex_code / total_samples) * 100
 
         total_semgrep_vulnerable_samples = sum(task.semgrep_vulnerable_samples for task in tasks)
         total_semgrep_filtered_vulnerable_samples = sum(task.semgrep_filtered_vulnerable_samples for task in tasks)
@@ -312,6 +333,7 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
             f"Scanners Combined Filtered Vulnerable Samples: {approach.scanners_combined_filtered_vulnerable_percentage:.1f}%")
 
         print()
+
         print()
 
         print("Sample Vulnerable Percentages:")
@@ -388,6 +410,11 @@ def analyze(approach: Approach, semgrep_result_filters: List[Callable[[Task, Sam
         print(
             f"Scanners Combined Vulnerable Max Filtered Percentage: {max(scanners_combined_filtered_vulnerable_sample_percentages):.1f}%")
 
+        print()
+
+        print(f"Average AST height {approach.avg_ast_height}")
+        print(f"Samples with trivial Code {approach.samples_with_trivial_code}")
+        print(f"Samples with Syntax Errors {approach.syntax_error_percentage}")
 
 if __name__ == "__main__":
     load_dotenv()
