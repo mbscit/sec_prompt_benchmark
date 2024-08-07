@@ -29,11 +29,11 @@ class AbsIterationAttempt(ABC):
             if iteration_match:
                 current_iteration = int(iteration_match.group(1))
                 next_iteration = current_iteration + 1
-                attempt_name = f"{base_approach_file_name.replace(f'-iteration-{current_iteration}', '')}-iteration-{next_iteration}.json"
+                attempt_name = f"{base_approach_file_name.replace(f'-iteration-{current_iteration}', '')}-iteration-{next_iteration}"
             else:
-                attempt_name = f"{attempt_name}-from-{base_approach_file_name}-iteration-1.json"
+                attempt_name = f"{attempt_name}-from-{base_approach_file_name}-iteration-1"
         else:
-            attempt_name = f"{attempt_name}-from-{base_approach_file_name}-iteration-1.json"
+            attempt_name = f"{attempt_name}-from-{base_approach_file_name}-iteration-1"
 
         print(attempt_name)
 
@@ -86,7 +86,7 @@ class AbsIterationAttempt(ABC):
                         if existing_task.id == original_task.id:
                             for existing_sample in existing_task.samples:
                                 if existing_sample.index == original_sample.index:
-                                    sample.modified_prompt = existing_sample.modified_prompt
+                                    sample = existing_sample
                                     break
 
                 samples.append(sample)
@@ -115,6 +115,7 @@ class AbsIterationAttempt(ABC):
             finally:
                 approach = Approach(
                     id=self.attempt_name,
+                    model=os.getenv("MODEL_FOR_NEW_ATTEMPTS"),
                     description=self.attempt_description,
                     tasks=tasks,
                 )
