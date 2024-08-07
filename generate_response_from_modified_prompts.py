@@ -38,8 +38,6 @@ class ResponseGenerator:
                 if task.modified_prompt:
                     sample = Sample(index=sample_index)
                     task.samples.append(sample)
-                else:
-                    raise ValueError(f"No prompt available for task {task.id} sample {sample_index}")
             if not sample.generated_response:
                 if task.modified_prompt:
                     sample.generated_response = self.generate_response(approach.model, task.modified_prompt)

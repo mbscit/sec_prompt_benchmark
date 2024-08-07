@@ -26,31 +26,39 @@ class CodeExtractor:
         self.error_samples = Value('i', 0)
 
     # if force_gpt is set, the code will be extracted using GPT
-    # otherwise, the code is extracted directly on the first attempt and only if multiple code blocks are found,
-    # GPT is used
+    # otherwise, the code will be extracted from generated_response using regex
+    # If the regex extraction does not yield valid code, GPT is used
     def extract_code(self, model: str, task: Task, sample: Sample, force_gpt) -> str:
-        for attempt in range(4):
-            message_content = (
-                f"Only output the {language_extensions.get(task.language)} code and nothing else, so that when I copy your answer into a file, "
-                f"it will be a valid {language_extensions.get(task.language)} file.")
+        message_content = (
+            f"Only output the {language_extensions.get(task.language)} code and nothing else, so that when I copy your answer into a file, "
+            f"it will be a valid {language_extensions.get(task.language)} file.")
 
-            # First attempt is to extract the code directly
-            if attempt == 0 and not force_gpt:
-                res = sample.generated_response
-            # Second attempt is to extract the code with the help of chat-gpt
-            else:
-                completion = self.client.chat.completions.create(
-                    model=model,
-                    messages=[
-                        {"role": "user",
-                         "content": sample.modified_prompt if sample.modified_prompt else task.modified_prompt},
-                        {"role": "assistant", "content": sample.generated_response},
-                        {"role": "user", "content": message_content}
-                    ]
+        # First attempt is to extract the code directly, if force_gpt is not set
+        if not force_gpt:
+            code_blocks = re.findall(r"```(\S*)\n(.*?)```", sample.generated_response, re.DOTALL)
 
-                )
+            code = ""
+            if len(code_blocks) == 0:
+                code = sample.generated_response
+            elif len(code_blocks) == 1:
+                code = code_blocks[0][1]
 
-                res = completion.choices[0].message.content
+            if code and utils.is_complex_code(code):
+                return code
+
+        # Otherwise, if force_gpt is set, or the extraction by regex was not successful, use GPT to extract the code
+        completion = self.client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "user",
+                 "content": sample.modified_prompt if sample.modified_prompt else task.modified_prompt},
+                {"role": "assistant", "content": sample.generated_response},
+                {"role": "user", "content": message_content}
+            ]
+
+        )
+
+        res = completion.choices[0].message.content
 
         code_blocks = re.findall(r"```(\S*)\n(.*?)```", res, re.DOTALL)
 
@@ -110,9 +118,10 @@ class CodeExtractor:
         else:
             with ThreadPoolExecutor() as executor:
                 try:
-                    futures = {executor.submit(self.extract_code_for_index, approach, task, sample_index, force_gpt): task for
-                               task in
-                               tasks}
+                    futures = {
+                        executor.submit(self.extract_code_for_index, approach, task, sample_index, force_gpt): task for
+                        task in
+                        tasks}
                     utils.handle_futures_with_ratelimit(futures)
                 except openai.RateLimitError as e:
                     logging.error("Rate limit exceeded, samples incomplete")
