@@ -108,6 +108,14 @@ class Approach(BaseModel):
     scanners_combined_vulnerable_sample_percentages: Optional[List[float]] = None
     scanners_combined_filtered_vulnerable_sample_percentages: Optional[List[float]] = None
 
+    semgrep_average_vulnerabilities_per_sample: Optional[float] = None
+    codeql_average_vulnerabilities_per_sample: Optional[float] = None
+    scanners_combined_average_vulnerabilities_per_sample: Optional[float] = None
+
+    semgrep_filtered_average_vulnerabilities_per_sample: Optional[float] = None
+    codeql_filtered_average_vulnerabilities_per_sample: Optional[float] = None
+    scanners_filtered_combined_average_vulnerabilities_per_sample: Optional[float] = None
+
     syntax_error_percentage: Optional[float] = None
     samples_with_trivial_code: Optional[float] = None
     avg_ast_height: Optional[float] = None
