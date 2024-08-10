@@ -3,6 +3,7 @@ import concurrent
 import json
 import logging
 import os
+import re
 import time
 import warnings
 from typing import List
@@ -62,7 +63,8 @@ def validate_task_integrity(tasks: List[Task], required_attributes: List[str]):
 def validate_sample_integrity(tasks: List[Task], required_attributes: List[str], num_samples: int = -1):
     errors: List[str] = []
 
-    if any(task.modified_prompt for task in tasks) and any(sample.modified_prompt for task in tasks for sample in task.samples):
+    if any(task.modified_prompt for task in tasks) and any(
+            sample.modified_prompt for task in tasks for sample in task.samples):
         raise ValueError("Both task and sample modified prompts are present. Only one can be used.")
 
     # take the length of the first samples array for reference
@@ -193,3 +195,8 @@ def is_complex_code(string, min_height=3):
     except SyntaxError:
         # If there's a syntax error, the string is not valid Python code
         return False
+
+
+def get_code_blocks(text) -> List[str]:
+    code_blocks = re.findall(r"```(\S*)\n(.*?)```", text, re.DOTALL)
+    return code_blocks

@@ -78,6 +78,9 @@ class Approach(BaseModel):
     description: str
     model: str
 
+    pending_batch_id: Optional[str] = None
+    pending_batch_goal: Optional[str] = None
+
     errors: Optional[Dict[str, List[SampleError]]] = None
 
     semgrep_vulnerable_percentage: Optional[float] = None

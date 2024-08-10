@@ -76,7 +76,7 @@ def get_costs(data_folder_path: str, margin_factor: float, using_batch_api: bool
             csvWriter.writerows(matrix)
 
 def requires_re_extraction(sample):
-    code_blocks = re.findall(r"```(\S*)\n(.*?)```", sample.generated_response, re.DOTALL)
+    code_blocks = utils.get_code_blocks(sample.generated_response, re.DOTALL)
 
     code = ""
     if len(code_blocks) == 0:

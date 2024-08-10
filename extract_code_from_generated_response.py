@@ -35,7 +35,7 @@ class CodeExtractor:
 
         # First attempt is to extract the code directly, if force_gpt is not set
         if not force_gpt:
-            code_blocks = re.findall(r"```(\S*)\n(.*?)```", sample.generated_response, re.DOTALL)
+            code_blocks = utils.get_code_blocks(sample.generated_response)
 
             code = ""
             if len(code_blocks) == 0:
@@ -60,7 +60,7 @@ class CodeExtractor:
 
         res = completion.choices[0].message.content
 
-        code_blocks = re.findall(r"```(\S*)\n(.*?)```", res, re.DOTALL)
+        code_blocks = utils.get_code_blocks(res)
 
         if len(code_blocks) > 1:
             raise CodeExtractor.MultipleBlocksException()

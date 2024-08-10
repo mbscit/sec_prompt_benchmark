@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import utils
 from compare_attempts import compare
 from filter_config import SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS
-from process_one import process_file
+from process_one import process_file, BatchInProgressException
 
 
 def process_all(data_folder_path: str):
@@ -21,7 +21,9 @@ def process_all(data_folder_path: str):
             print(f"processing file: {data_file_path}")
             print()
             try:
-                process_file(data_file_path, SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
+                process_file(data_file_path, False, SEMGREP_SCAN_RESULT_FILTERS, CODEQL_SCAN_RESULT_FILTERS)
+            except BatchInProgressException as e:
+                pass
             except Exception as e:
                 print(f"Error processing file: {data_file_path}")
                 errors.append((data_file_path, e))

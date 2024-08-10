@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from openai.types import FileObject, Batch
 
-from project_types.custom_types import Sample
+from project_types.custom_types import Sample, Approach
 
 sys.path.append("../sec_prompt_benchmark")
 
@@ -27,99 +27,95 @@ def get_confirmation():
             print("Invalid input. Please enter 'Y' or 'N'.")
 
 
+def create_response_generation_batch(approach: Approach) -> str:
+    tasks = approach.tasks
 
-def create_response_generation_batch(data_file_path):
-    if os.path.isfile(data_file_path):
-        approach = utils.read_approaches_file(data_file_path)
-        tasks = approach.tasks
+    utils.validate_task_integrity(tasks, ["id", "suspected_vulnerabilities"])
+    utils.validate_sample_integrity(tasks, [])
 
-        utils.validate_task_integrity(tasks, ["id", "suspected_vulnerabilities"])
-        utils.validate_sample_integrity(tasks, [])
+    requests_file_path = utils.relative_path_from_root(
+        f"batch_processing/{approach.id}_{approach.model}_response_generation_batch.jsonl")
 
-        requests_file_path = utils.relative_path_from_root(
-            f"batch_processing/{approach.id}_{approach.model}_response_generation_batch.jsonl")
+    requests = []
 
-        if os.path.isfile(requests_file_path):
-            raise FileExistsError(f"File already exists at {requests_file_path}")
+    for task in tasks:
+        for sample_index in range(samples_per_task):
+            sample: Sample = next((sample for sample in task.samples if sample.index == sample_index), None)
 
-        requests = []
-
-        for task in tasks:
-            for sample_index in range(samples_per_task):
-                sample: Sample = next((sample for sample in task.samples if sample.index == sample_index), None)
-
-                if not sample:
-                    if task.modified_prompt:
-                        sample = Sample(index=sample_index)
-                        task.samples.append(sample)
-
+            if not sample:
                 if task.modified_prompt:
-                    prompt = task.modified_prompt
-                elif sample.modified_prompt:
-                    prompt = sample.modified_prompt
-                else:
-                    raise ValueError(f"No prompt available for task {task.id} sample {sample.index}")
+                    sample = Sample(index=sample_index)
+                    task.samples.append(sample)
 
-                if not sample.generated_response:
-                    requests.append({
-                        "custom_id": "approach-" + approach.id + "-task-" + task.id + "-sample-" + str(sample.index),
-                        "method": "POST", "url": "/v1/chat/completions",
-                        "body": {
-                            "model": approach.model,
-                            "messages": [
-                                {
-                                    "role": "user",
-                                    "content": prompt
-                                }
-                            ]
-                        }
-                    })
+            if task.modified_prompt:
+                prompt = task.modified_prompt
+            elif sample.modified_prompt:
+                prompt = sample.modified_prompt
+            else:
+                raise ValueError(f"No prompt available for task {task.id} sample {sample.index}")
 
-        custom_ids = [request["custom_id"] for request in requests]
-        duplicated_ids = [id for id in set(custom_ids) if custom_ids.count(id) > 1]
-        for duplicate_custom_id in duplicated_ids:
-            raise f"Duplicate custom_id {duplicate_custom_id}"
+            if not sample.generated_response:
+                requests.append({
+                    "custom_id": "approach-" + approach.id + "-task-" + task.id + "-sample-" + str(sample.index),
+                    "method": "POST", "url": "/v1/chat/completions",
+                    "body": {
+                        "model": approach.model,
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": prompt
+                            }
+                        ]
+                    }
+                })
 
-        with open(requests_file_path, 'w') as file:
-            for record in requests:
-                json.dump(record, file)
-                file.write('\n')
+    custom_ids = [request["custom_id"] for request in requests]
+    duplicated_ids = [id for id in set(custom_ids) if custom_ids.count(id) > 1]
+    for duplicate_custom_id in duplicated_ids:
+        raise f"Duplicate custom_id {duplicate_custom_id}"
 
-        print(f"Requests successfully written to {requests_file_path}")
+    with open(requests_file_path, 'w') as file:
+        for record in requests:
+            json.dump(record, file)
+            file.write('\n')
 
-        if get_confirmation():
+    print(f"Requests successfully written to {requests_file_path}")
 
-            client: OpenAI = OpenAI()
+    client: OpenAI = OpenAI()
 
-            batch_input_file: FileObject = client.files.create(
-                file=open(requests_file_path, "rb"),
-                purpose="batch"
-            )
+    batch_input_file: FileObject = client.files.create(
+        file=open(requests_file_path, "rb"),
+        purpose="batch"
+    )
 
-            print(f"Batch input file created with id {batch_input_file.id}, name {batch_input_file.filename}")
+    print(f"Batch input file created with id {batch_input_file.id}, name {batch_input_file.filename}")
 
-            batch_input_file_id = batch_input_file.id
+    batch_input_file_id = batch_input_file.id
 
-            utils.write_approaches_file(data_file_path, approach)
 
-            batch: Batch = client.batches.create(
-                input_file_id=batch_input_file_id,
-                endpoint="/v1/chat/completions",
-                completion_window="24h",
-                metadata={
-                    "approach_id": approach.id,
-                    "model": approach.model
-                }
-            )
+    batch: Batch = client.batches.create(
+        input_file_id=batch_input_file_id,
+        endpoint="/v1/chat/completions",
+        completion_window="24h",
+        metadata={
+            "approach_id": approach.id,
+            "model": approach.model
+        }
+    )
 
-            print(f"Batch job created with id {batch.id}")
+    print(f"Batch job created with id {batch.id}")
+    return batch.id
 
-        else:
-            print("Operation cancelled.")
 
-    else:
-        raise FileNotFoundError(f"Data file not found at {data_file_path}")
+
 
 if __name__ == "__main__":
-    data_file_path = utils.relative_path_from_root("data-4o-mini/ptfscg_rci-from-baseline-iteration-3.json")
-    create_response_generation_batch(data_file_path)
+    data_file_path = utils.relative_path_from_root("validation-4o-mini/baseline.json")
+    if os.path.isfile(data_file_path):
+        approach = utils.read_approaches_file(data_file_path)
+        batch_id = create_response_generation_batch(approach)
+        approach.pending_batch_id = batch_id
+        approach.pending_batch_goal = "response_generation"
+        utils.write_approaches_file(data_file_path, approach)
+    else:
+        raise FileNotFoundError(f"Data file not found at {data_file_path}")
