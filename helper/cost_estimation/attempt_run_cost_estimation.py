@@ -20,6 +20,8 @@ pricing_per_1m_tokens = {
     'gpt-4-turbo-out': 30.00,
     'gpt-4o-in': 5.00,
     'gpt-4o-out': 15.00,
+    'gpt-4o-2024-08-06-in': 2.50,
+    'gpt-4o-2024-08-06-out': 10,
     'gpt-4o-mini-in': 0.15,
     'gpt-4o-mini-out': 0.60,
 }
@@ -61,8 +63,8 @@ def get_costs(data_folder_path: str, margin_factor: float, using_batch_api: bool
             "GPT-4 Cost",
             "GPT-4-turbo Cost",
             "GPT-4o Cost",
-            "GPT-4o-mini Cost",
-
+            "GPT-4o-2024-08-06 Cost",
+            "GPT-4o-mini Cost"
         ],
     ).to_string(index=False, header=True)
 
@@ -75,8 +77,9 @@ def get_costs(data_folder_path: str, margin_factor: float, using_batch_api: bool
             csvWriter.writeheader()
             csvWriter.writerows(matrix)
 
+
 def requires_re_extraction(sample):
-    code_blocks = utils.get_code_blocks(sample.generated_response, re.DOTALL)
+    code_blocks = utils.get_code_blocks(sample.generated_response)
 
     code = ""
     if len(code_blocks) == 0:
@@ -89,8 +92,8 @@ def requires_re_extraction(sample):
     else:
         return True
 
-def get_no_tokens(tasks, samples_requiring_re_extraction, encoding):
 
+def get_no_tokens(tasks, samples_requiring_re_extraction, encoding):
     re_extraction_in_tokens = sum(len(encoding.encode(
         (sample.modified_prompt
          if sample.modified_prompt else task.modified_prompt)
@@ -132,7 +135,8 @@ def analyze(approach: Approach, results, margin_factor, using_batch_api):
 
     total_output_characters = sum(len(sample.generated_response) for task in tasks for sample in task.samples)
 
-    samples_requiring_re_extraction = [sample for task in tasks for sample in task.samples if requires_re_extraction(sample)]
+    samples_requiring_re_extraction = [sample for task in tasks for sample in task.samples if
+                                       requires_re_extraction(sample)]
 
     model = "gpt-3.5-turbo-0125"
     encoding = tiktoken.encoding_for_model(model)
@@ -146,17 +150,22 @@ def analyze(approach: Approach, results, margin_factor, using_batch_api):
 
     model = "gpt-4-turbo"
     encoding = tiktoken.encoding_for_model(model)
-    total_4_turbo_input_tokens, total_4_turbo_output_tokens = get_no_tokens(tasks, samples_requiring_re_extraction, encoding)
+    total_4_turbo_input_tokens, total_4_turbo_output_tokens = get_no_tokens(tasks, samples_requiring_re_extraction,
+                                                                            encoding)
     total_4_turbo_cost = get_cost_for_model(model, total_4_turbo_input_tokens, total_4_turbo_output_tokens)
 
     model = "gpt-4o"
     encoding = tiktoken.encoding_for_model(model)
-    total_4o_input_tokens, total_4o_output_tokens = get_no_tokens(tasks ,samples_requiring_re_extraction, encoding)
+    total_4o_input_tokens, total_4o_output_tokens = get_no_tokens(tasks, samples_requiring_re_extraction, encoding)
     total_4o_cost = get_cost_for_model(model, total_4o_input_tokens, total_4o_output_tokens)
+
+    model = "gpt-4o-2024-08-06"
+    total_4o_2024_08_06_cost = get_cost_for_model(model, total_4o_input_tokens, total_4o_output_tokens)
 
     model = "gpt-4o-mini"
     encoding = tiktoken.encoding_for_model(model)
-    total_4o_mini_input_tokens, total_4o_mini_output_tokens = get_no_tokens(tasks, samples_requiring_re_extraction, encoding)
+    total_4o_mini_input_tokens, total_4o_mini_output_tokens = get_no_tokens(tasks, samples_requiring_re_extraction,
+                                                                            encoding)
     total_4o_mini_cost = get_cost_for_model(model, total_4o_mini_input_tokens, total_4o_mini_output_tokens)
 
     if using_batch_api:
@@ -165,6 +174,7 @@ def analyze(approach: Approach, results, margin_factor, using_batch_api):
         total_4_turbo_cost = total_4_turbo_cost * 0.5
         total_4o_cost = total_4o_cost * 0.5
         total_4o_mini_cost = total_4o_mini_cost * 0.5
+        total_4o_2024_08_06_cost = total_4o_2024_08_06_cost * 0.5
 
     vat_factor = 1.081
     total_3_5_cost = round(total_3_5_cost * margin_factor * vat_factor, 4)
@@ -172,8 +182,7 @@ def analyze(approach: Approach, results, margin_factor, using_batch_api):
     total_4_turbo_cost = round(total_4_turbo_cost * margin_factor * vat_factor, 4)
     total_4o_cost = round(total_4o_cost * margin_factor * vat_factor, 4)
     total_4o_mini_cost = round(total_4o_mini_cost * margin_factor * vat_factor, 4)
-
-
+    total_4o_2024_08_06_cost = round(total_4o_2024_08_06_cost * margin_factor * vat_factor, 4)
 
     results.update(
         {
@@ -186,8 +195,8 @@ def analyze(approach: Approach, results, margin_factor, using_batch_api):
             "GPT-4 Cost": total_4_cost,
             "GPT-4-turbo Cost": total_4_turbo_cost,
             "GPT-4o Cost": total_4o_cost,
+            "GPT-4o-2024-08-06 Cost": total_4o_2024_08_06_cost,
             "GPT-4o-mini Cost": total_4o_mini_cost,
-
         })
 
 
