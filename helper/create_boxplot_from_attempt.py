@@ -40,9 +40,11 @@ for file in os.listdir(data_folder_path):
         )
 
 print(
-    f"""
-\\begin{{tikzpicture}}
-\\begin{{axis}}
+    """
+\\begin{figure}[htbp]
+\\begin{center}
+\\begin{tikzpicture}
+\\begin{axis}
     ["""
 )
 print("ytick={", end="")
@@ -77,3 +79,10 @@ for stat in stats:
 
 print("  \end{axis}")
 print("\end{tikzpicture}")
+print(
+    f"""\end{{center}}
+\caption{{Vulnerability Distribution per Attempt {data_folder_path.replace(".", "").replace("/", "").replace("data", "GPT")}}}
+\label{{fig:vulnerability_distribution_per_attempt_{data_folder_path.replace(".", "").replace("/", "").replace("data", "gpt")}}}
+\end{{figure}}
+"""
+)
