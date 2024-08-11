@@ -60,7 +60,12 @@ class AbsIterationAttempt(ABC):
         utils.write_approaches_file(data_file_path, approach)
 
     def create_approach(self, base_approach: Approach, existing_approach: Approach) -> Approach:
+        num_samples = int(os.getenv("SAMPLES_PER_TASK"))
+
         tasks = []
+
+        if num_samples > len(base_approach.tasks[0].samples):
+            raise ValueError("Number of requested samples per task is greater than the number of samples in the base approach.")
 
         all_samples = []
 
@@ -75,22 +80,23 @@ class AbsIterationAttempt(ABC):
             samples = []
 
             for original_sample in original_task.samples:
-                sample = Sample(
-                    index=original_sample.index,
-                )
-                if original_sample.modified_prompt:
-                    sample.original_prompt = original_sample.modified_prompt
+                if original_sample.index < num_samples:
+                    sample = Sample(
+                        index=original_sample.index,
+                    )
+                    if original_sample.modified_prompt:
+                        sample.original_prompt = original_sample.modified_prompt
 
-                if existing_approach:
-                    for existing_task in existing_approach.tasks:
-                        if existing_task.id == original_task.id:
-                            for existing_sample in existing_task.samples:
-                                if existing_sample.index == original_sample.index:
-                                    sample = existing_sample
-                                    break
+                    if existing_approach:
+                        for existing_task in existing_approach.tasks:
+                            if existing_task.id == original_task.id:
+                                for existing_sample in existing_task.samples:
+                                    if existing_sample.index == original_sample.index:
+                                        sample = existing_sample
+                                        break
 
-                samples.append(sample)
-                all_samples.append((sample, original_task, original_sample))
+                    samples.append(sample)
+                    all_samples.append((sample, original_task, original_sample))
             task.samples = samples
             tasks.append(task)
 
@@ -101,7 +107,7 @@ class AbsIterationAttempt(ABC):
                 futures = {
                     executor.submit(self.add_new_prompt, os.getenv("MODEL_FOR_NEW_ATTEMPTS"), sample, original_task, original_sample): (
                         sample, original_task, original_sample)
-                    for sample, original_task, original_sample in all_samples
+                    for sample, original_task, original_sample in all_samples if not sample.modified_prompt
                 }
 
                 print(f"Number of futures created: {len(futures)}")
