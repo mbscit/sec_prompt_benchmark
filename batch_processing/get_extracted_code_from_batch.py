@@ -42,7 +42,7 @@ def add_extracted_code_from_batch(batch: Batch, approach: Approach):
 
     for res in results:
         custom_id = res['custom_id']
-        pattern = r"approach-([^/]+)-task-([^/]+)-sample-(\d+)"
+        pattern = r"approach-(.+)-task-(.+)-sample-(\d+)"
 
         # Search the string using the pattern
         match = re.search(pattern, custom_id)
@@ -51,6 +51,9 @@ def add_extracted_code_from_batch(batch: Batch, approach: Approach):
             approach_id = match.group(1)
             task_id = match.group(2)
             sample_index = match.group(3)
+
+            if custom_id != f"approach-{approach_id}-task-{task_id}-sample-{sample_index}":
+                raise ValueError(f"Error reconstructing approach_id, task_id and sample_index from custom_id {custom_id}. Please check the format.")
 
             # Convert sample_index to integer if needed
             sample_index = int(sample_index)
@@ -71,6 +74,9 @@ def add_extracted_code_from_batch(batch: Batch, approach: Approach):
                 sample.extracted_code = code_blocks[0][1]
             else:
                 sample.extracted_code = code
+        else:
+            raise ValueError(f"Error parsing custom_id {custom_id}. Please check the format.")
+
 
     for sample_index in set([error.sample_index for error in errors]):
         approach.update_errors("extract_response", errors, sample_index)

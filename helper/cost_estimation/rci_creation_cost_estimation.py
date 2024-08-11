@@ -5,7 +5,7 @@ import tiktoken
 from dotenv import load_dotenv
 
 import utils
-from helper.attempt_run_cost_estimation import get_cost_for_model
+from helper.cost_estimation.attempt_run_cost_estimation import get_cost_for_model
 from project_types.custom_types import Approach
 
 

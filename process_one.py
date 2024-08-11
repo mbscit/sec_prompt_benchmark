@@ -109,7 +109,7 @@ def handle_batch(approach: Approach, batch_id, wait_for_batch_completion, approa
                     in_progress = False
                 else:
                     request_count_string = ""
-                    if batch.request_counts:
+                    if batch.request_counts and batch.request_counts.total:
                         request_count_string = f"{batch.request_counts.completed}/{batch.request_counts.total} completed, {batch.request_counts.failed} failed"
                     print(f"Batch {approach.pending_batch_id} status: {batch.status} {request_count_string}")
                     time.sleep(30)
@@ -126,10 +126,14 @@ def handle_batch(approach: Approach, batch_id, wait_for_batch_completion, approa
         print(f"Batch {approach.pending_batch_id} completed.")
         if approach.pending_batch_goal == "response_generation":
             add_generated_responses_from_batch(batch, approach)
+            approach.pending_batch_id = None
+            approach.pending_batch_goal = None
             utils.write_approaches_file(approach_file_path, approach)
 
         elif approach.pending_batch_goal == "response_extraction":
             add_extracted_code_from_batch(batch, approach)
+            approach.pending_batch_id = None
+            approach.pending_batch_goal = None
             utils.write_approaches_file(approach_file_path, approach)
         else:
             raise ValueError(f"Invalid batch goal {approach.pending_batch_goal}")
@@ -148,39 +152,40 @@ def process_file(data_file_path, wait_for_batch_completion: bool,
     approach = Approach(**data)
     previous_approach_dict = approach.dict(exclude_defaults=True)
 
-    generation_or_extraction_necessary = (
-            any(
-                task for task in approach.tasks if not task.samples or len(task.samples) < samples_per_task)
-            or any(not sample.generated_response or not sample.extracted_code for task in approach.tasks for sample in
-                   task.samples))
-    if generation_or_extraction_necessary:
-        batch_id = approach.pending_batch_id
-        if (batch_id):
-            handle_batch(approach, batch_id, wait_for_batch_completion, data_file_path)
+    batch_id = approach.pending_batch_id
+    if (batch_id):
+        handle_batch(approach, batch_id, wait_for_batch_completion, data_file_path)
 
-        num_responses_to_generate = sum(
-            1 for task in approach.tasks for sample in task.samples if not sample.generated_response)
-        if len(approach.tasks[0].samples) < samples_per_task:
-            num_responses_to_generate += (samples_per_task - len(approach.tasks[-1].samples)) * len(approach.tasks)
+    num_responses_to_generate = sum(
+        1 for task in approach.tasks for sample in task.samples if not sample.generated_response)
+    if len(approach.tasks[0].samples) < samples_per_task:
+        num_responses_to_generate += (samples_per_task - len(approach.tasks[-1].samples)) * len(approach.tasks)
 
-        if num_responses_to_generate > int(os.getenv('BATCH_THRESHOLD')):
-            batch_id = create_response_generation_batch(approach)
-            approach.pending_batch_id = batch_id
-            approach.pending_batch_goal = "response_generation"
-            utils.write_approaches_file(f"{file_name}{file_extension}", approach)
-            handle_batch(approach, batch_id, wait_for_batch_completion, data_file_path)
+    if num_responses_to_generate > int(os.getenv('BATCH_THRESHOLD')):
+        batch_id = create_response_generation_batch(approach)
+        approach.pending_batch_id = batch_id
+        approach.pending_batch_goal = "response_generation"
+        utils.write_approaches_file(f"{file_name}{file_extension}", approach)
+        handle_batch(approach, batch_id, wait_for_batch_completion, data_file_path)
 
-        samples_to_extract = [sample for task in approach.tasks for sample in task.samples if
-                              sample.generated_response and not sample.extracted_code]
-        num_gpt_extracts = get_num_gpt_extracts(samples_to_extract)
-        if num_gpt_extracts > int(os.getenv('BATCH_THRESHOLD')):
-            batch_id = create_response_extraction_batch(approach)
-            approach.pending_batch_id = batch_id
-            approach.pending_batch_goal = "response_extraction"
-            utils.write_approaches_file(f"{file_name}{file_extension}", approach)
-            handle_batch(approach, batch_id, wait_for_batch_completion, data_file_path)
+    samples_to_extract = [sample for task in approach.tasks for sample in task.samples if
+                          sample.generated_response and not sample.extracted_code]
+    num_gpt_extracts = get_num_gpt_extracts(samples_to_extract)
+    if num_gpt_extracts > int(os.getenv('BATCH_THRESHOLD')):
+        batch_id = create_response_extraction_batch(approach)
+        approach.pending_batch_id = batch_id
+        approach.pending_batch_goal = "response_extraction"
+        utils.write_approaches_file(f"{file_name}{file_extension}", approach)
+        handle_batch(approach, batch_id, wait_for_batch_completion, data_file_path)
 
-        if not approach.pending_batch_id:
+    if not approach.pending_batch_id:
+        generation_or_extraction_necessary = (
+                any(
+                    task for task in approach.tasks if not task.samples or len(task.samples) < samples_per_task)
+                or any(
+            not sample.generated_response or not sample.extracted_code for task in approach.tasks for sample in
+            task.samples))
+        if generation_or_extraction_necessary:
             for i in range(samples_per_task):
                 print(f"Starting execution for sample {i}")
 
@@ -219,14 +224,14 @@ def process_file(data_file_path, wait_for_batch_completion: bool,
 
                 print()
 
-    else:
-        print(f"Starting semgrep scan for approach")
-        st = time.time()
-        semgrep_scanner = SemgrepScanner()
-        semgrep_scanner.scan_samples(approach)
-        previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
-        et = time.time()
-        print(f"Semgrep scan finished, time: {(et - st):.1f}s")
+        else:
+            print(f"Starting semgrep scan for approach")
+            st = time.time()
+            semgrep_scanner = SemgrepScanner()
+            semgrep_scanner.scan_samples(approach)
+            previous_approach_dict = save_if_changed(f"{file_name}{file_extension}", approach, previous_approach_dict)
+            et = time.time()
+            print(f"Semgrep scan finished, time: {(et - st):.1f}s")
 
     print(f"Starting codeql scan")
     st = time.time()

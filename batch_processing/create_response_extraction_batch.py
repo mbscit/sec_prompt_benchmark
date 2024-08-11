@@ -43,7 +43,7 @@ def create_response_extraction_batch(approach: Approach) -> str:
         for sample_index in range(samples_per_task):
             sample: Sample = next((sample for sample in task.samples if sample.index == sample_index), None)
             if not sample.extracted_code:
-                code_blocks = get_code_blocks(sample.generated_response)
+                code_blocks = utils.get_code_blocks(sample.generated_response)
 
                 code = ""
                 if len(code_blocks) == 0:
