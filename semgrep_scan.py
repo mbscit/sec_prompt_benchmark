@@ -16,6 +16,8 @@ import utils
 from project_types.custom_types import Approach, Task, language_extensions, SampleError, Sample
 from utils import relative_path_from_root
 
+load_dotenv()
+
 
 class SemgrepScanner:
 
@@ -95,7 +97,7 @@ class SemgrepScanner:
             if not len(indexes_to_consider):
                 print("Approach already been scanned with semgrep for all tasks")
             else:
-                with ThreadPoolExecutor(max_workers=8) as executor:
+                with ThreadPoolExecutor(max_workers=int(os.getenv("MAX_SCAN_WORKERS"))) as executor:
                     # Create a scanner for every index
                     # assuming samples in all tasks have the same length
                     # since validate_sample_integrity checks it
