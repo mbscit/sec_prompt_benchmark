@@ -45,9 +45,11 @@ print(
 \\begin{center}
 \\begin{tikzpicture}
 \\begin{axis}
-    ["""
+    [
+    height=.8\\textheight,
+    width=.7\\textwidth,"""
 )
-print("ytick={", end="")
+print("    ytick={", end="")
 
 end = len(labels)
 for id, label in enumerate(labels, start=1):
