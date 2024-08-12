@@ -1,3 +1,4 @@
+from operator import itemgetter
 import os
 import sys
 import statistics
@@ -13,7 +14,6 @@ data_folder_path = os.path.dirname(
     utils.relative_path_from_root(os.getenv("DATA_FILE_PATH"))
 )
 
-labels = []
 stats = []
 
 for file in os.listdir(data_folder_path):
@@ -21,9 +21,9 @@ for file in os.listdir(data_folder_path):
     # checking if it is a file
     if os.path.isfile(data_file_path):
         approach = utils.read_approaches_file(data_file_path)
-        labels.append(approach.id.replace("_", "\_"))
         stats.append(
             {
+                "id": approach.id.replace("_", "\_").replace("iteration", "iter"),
                 "median": statistics.median(
                     approach.scanners_agree_sample_filtered_vulnerable_percentages
                 ),
@@ -36,37 +36,41 @@ for file in os.listdir(data_folder_path):
                 "quartiles": statistics.quantiles(
                     approach.scanners_agree_sample_filtered_vulnerable_percentages
                 ),
+                "avg": approach.scanners_agree_filtered_vulnerable_percentage,
             }
         )
 
+stats = sorted(stats, key=itemgetter("avg"), reverse=True)
+
 print(
-    """
-\\begin{figure}[htbp]
+    """\\begin{figure}[htbp]
 \\begin{center}
 \\begin{tikzpicture}
 \\begin{axis}
     [
-    height=.8\\textheight,
-    width=.7\\textwidth,"""
+    cycle list={{purple},{blue},{black},{darkgray},{violet},{brown}},
+    height=.7\\textheight,
+    width=.7\\textwidth,
+    xlabel=Vulnerable Percentage,"""
 )
 print("    ytick={", end="")
 
-end = len(labels)
-for id, label in enumerate(labels, start=1):
+end = len(stats)
+for id, stat in enumerate(stats, start=1):
     print(id, end="")
     if id != end:
         print(",", end="")
 print("},")
 print("    yticklabels={", end="")
 
-for id, label in enumerate(labels, start=1):
-    print(label, end="")
+for id, stat in enumerate(stats, start=1):
+    print(stat.get("id"), end="")
     if id != end:
         print(",", end="")
 print("},")
 print("    ]")
 
-for stat in stats:
+for id, stat in enumerate(stats, start=1):
     print(
         f"""    \\addplot+[
     boxplot prepared={{
@@ -76,15 +80,14 @@ for stat in stats:
         upper whisker={stat.get("max"):.3f},
         lower whisker={stat.get("min"):.3f}
     }},
-    ] coordinates {{}};"""
+    ] coordinates {{({id},{stat.get("avg"):.3f})}};"""
     )
 
 print("  \end{axis}")
 print("\end{tikzpicture}")
 print(
     f"""\end{{center}}
-\caption{{Vulnerability Distribution per Attempt {data_folder_path.replace(".", "").replace("/", "").replace("data", "GPT")}}}
-\label{{fig:vulnerability_distribution_per_attempt_{data_folder_path.replace(".", "").replace("/", "").replace("data", "gpt")}}}
-\end{{figure}}
-"""
+\caption{{Vulnerability Distribution per Attempt {data_folder_path.replace(".", "").replace("/", "").replace("35", "3.5-turbo").replace("data", "GPT")}}}
+\label{{fig:vulnerability_distribution_per_attempt_{data_folder_path.replace(".", "").replace("/", "").replace("35", "3.5-turbo").replace("data", "gpt")}}}
+\end{{figure}}"""
 )
