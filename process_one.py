@@ -143,6 +143,7 @@ def process_file(data_file_path, wait_for_batch_completion: bool,
                  semgrep_result_filters: List[Callable[[Task, Sample, dict], bool]] = None,
                  codeql_result_filters: List[Callable[[Task, Sample, dict], bool]] = None):
     load_dotenv()
+    print(f"Processing file {data_file_path}")
     samples_per_task = int(os.getenv('SAMPLES_PER_TASK'))
 
     file_name, file_extension = os.path.splitext(data_file_path)
