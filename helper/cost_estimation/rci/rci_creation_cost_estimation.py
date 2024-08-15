@@ -93,15 +93,23 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
 
-    base = utils.read_approaches_file(os.path.join(data_folder_path, "baseline.json"))
-    result = utils.read_approaches_file(os.path.join(data_folder_path, "ptfscg_rci-from-baseline-iteration-1.json"))
-    results = {"Filename": os.path.basename("ptfscg_rci-from-baseline-iteration-1.json")}
+
+
+    base = utils.read_approaches_file(os.path.join(data_folder_path, "intermediate_steps", "ptfscg-zero-shot-cot-step-generation.json"))
+    result = utils.read_approaches_file(os.path.join(data_folder_path, "ptfscg_cot_answer_extraction.json"))
+    results = {"Filename": os.path.basename("ptfscg_cot_answer_extraction.json")}
     results.update(analyze(base, result))
     matrix.append(results)
 
     base = utils.read_approaches_file(os.path.join(data_folder_path, "pe-01-a.json"))
     result = utils.read_approaches_file(os.path.join(data_folder_path, "ptfscg_rci-from-baseline-iteration-1.json"))
     results = {"Filename": os.path.basename("ptfscg_rci-from-pe-03-a.json")}
+    results.update(analyze(base, result))
+    matrix.append(results)
+
+    base = utils.read_approaches_file(os.path.join(data_folder_path, "baseline.json"))
+    result = utils.read_approaches_file(os.path.join(data_folder_path, "ptfscg_rci-from-baseline-iteration-1.json"))
+    results = {"Filename": os.path.basename("ptfscg_rci-from-baseline-iteration-1.json")}
     results.update(analyze(base, result))
     matrix.append(results)
 
