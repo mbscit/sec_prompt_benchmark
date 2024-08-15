@@ -112,15 +112,15 @@ def get_no_tokens(tasks, samples_requiring_re_extraction, encoding):
             sum(len(encoding.encode(sample.generated_response)) for task in tasks for sample in task.samples))
     else:
         return (
-            re_extraction_out_tokens + sum(len(sample.modified_prompt) for task in tasks for sample in task.samples),
-            sum(len(sample.generated_response) for task in tasks for sample in task.samples))
+            re_extraction_out_tokens + sum(len(encoding.encode(sample.modified_prompt)) for task in tasks for sample in task.samples),
+            sum(len(encoding.encode(sample.generated_response)) for task in tasks for sample in task.samples))
 
 
 def get_cost_for_model(model, total_input_tokens, total_output_tokens):
-    input_cost_per_token = pricing_per_1m_tokens[f"{model}-in"] / 1_000_000
-    output_cost_per_token = pricing_per_1m_tokens[f"{model}-out"] / 1_000_000
+    input_cost_per_million_tokens = pricing_per_1m_tokens[f"{model}-in"]
+    output_cost_per_million_tokens = pricing_per_1m_tokens[f"{model}-out"]
 
-    total_cost = (total_input_tokens * input_cost_per_token) + (total_output_tokens * output_cost_per_token)
+    total_cost = ((total_input_tokens / 1_000_000) * input_cost_per_million_tokens) + ((total_output_tokens / 1_000_000) * output_cost_per_million_tokens)
 
     return total_cost
 
