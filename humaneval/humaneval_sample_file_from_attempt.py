@@ -22,7 +22,7 @@ for task in approach.tasks:
 
 # write to jsonl file
 output_file_name = approach.id + "-" + approach.model + ".jsonl"
-output_file_path = utils.relative_path_from_root("HumanEval/samples/" + output_file_name)
+output_file_path = utils.relative_path_from_root("humaneval/samples/" + output_file_name)
 with open(output_file_path, "w") as file:
     for sample in samples:
         file.write(f"{json.dumps(sample)}\n")
