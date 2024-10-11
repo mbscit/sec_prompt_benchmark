@@ -28,5 +28,5 @@ with open(file_path, "r") as file:
 
     print(prompts)
 
-    dataset_file_path = utils.relative_path_from_root("datasets/HumanEval.json")
+    dataset_file_path = utils.relative_path_from_root("datasets/HumanEval/HumanEval.json")
     utils.write_dataset_file(dataset_file_path, prompts)
