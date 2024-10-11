@@ -6,7 +6,7 @@ The tool is relying on the scanners [Semgrep][3] and [CodeQL][4] to evaluate the
 Due to the limitations of these scanners, the absolute number of vulnerabilities is inaccurate.
 The relative difference between techniques is still a good indicator of the effectiveness of the prompt strategy.
 
-The `dataset/benchmark.json` dataset consists of data from [LLMSecEval][1] and [SecurityEval][2].  
+The `dataset/benchmark.json` dataset consists of data from LLMSecEval [\[1\]](#1) and SecurityEval [\[2\]](#2).  
 
 ## Install Requirements
 
@@ -53,10 +53,13 @@ The `process_one.py` script can then be used to generate the code and evaluate i
 The `process_all.py` script can be used to generate and evaluate all attempts in a directory sequentially.
 The `compare_attempts.py` script is producing a csv file with metrics for all attempts in a directory.
 
-<!-- links -->
 
-[1]: https://arxiv.org/abs/2303.09384
-[2]: https://github.com/s2e-lab/SecurityEval
+## References
+<a id="1">[1]</a>
+C. Tony, M. Mutas, N. Díaz Ferreyra, and R. Scandariato, "LLMSecEval: A Dataset of Natural Language Prompts for Security Evaluations," in 2023 IEEE/ACM 20th International Conference on Mining Software Repositories (MSR), 2023. DOI: 10.5281/zenodo.7565965. Available: https://github.com/tuhh-softsec/LLMSecEval  
+<a id="2">[2]</a>
+M. L. Siddiq and J. C. S. Santos, "SecurityEval Dataset: Mining Vulnerability Examples to Evaluate Machine Learning-Based Code Generation Techniques," Proceedings of the 1st International Workshop on Mining Software Repositories Applications for Privacy and Security (MSR4P&S ’22), Nov. 2022, doi: 10.1145/3549035.3561184. Available: https://github.com/s2e-lab/SecurityEval
+<!-- links -->
 [3]: https://semgrep.dev/
 [4]: https://codeql.github.com/
 [5]: https://platform.openai.com/docs/guides/batch
